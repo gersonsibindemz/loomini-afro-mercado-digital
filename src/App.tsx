@@ -17,6 +17,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PasswordRecovery from "./pages/PasswordRecovery";
 import Dashboard from "./pages/Dashboard";
+import BuyerDashboard from "./pages/BuyerDashboard";
+import CreatorDashboard from "./pages/CreatorDashboard";
 import ProductCreation from "./pages/ProductCreation";
 import NotFound from "./pages/NotFound";
 
@@ -36,6 +38,8 @@ const AppContent = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/recuperar-senha" element={<PasswordRecovery />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/painel-comprador" element={<BuyerDashboard />} />
+          <Route path="/painel-criador" element={<CreatorDashboard />} />
           <Route path="/cadastro-produto" element={<ProductCreation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
