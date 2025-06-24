@@ -129,6 +129,28 @@
     @apply w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-loomini-blue focus:border-transparent transition-all duration-200;
   }
 
+  /* Text truncation utilities */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
   /* Custom Color Classes */
   .text-loomini-blue {
     color: rgb(var(--loomini-blue));
@@ -187,4 +209,65 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Form Styles */
+.form-container {
+  @apply max-w-md mx-auto bg-white p-8 rounded-2xl shadow-lg border border-gray-100;
+}
+
+.form-title {
+  @apply text-3xl font-bold text-center text-loomini-dark mb-8;
+}
+
+.form-group {
+  @apply mb-6;
+}
+
+.form-label {
+  @apply block text-sm font-semibold text-gray-700 mb-2;
+}
+
+.form-input {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-loomini-blue focus:border-loomini-blue transition-all duration-200 text-gray-900;
+}
+
+.form-input.error {
+  @apply border-red-500 focus:ring-red-500 focus:border-red-500;
+}
+
+.form-error {
+  @apply text-red-500 text-sm mt-1;
+}
+
+.form-button {
+  @apply w-full loomini-button py-3 text-lg font-semibold;
+}
+
+.form-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.form-button.loading {
+  @apply flex items-center justify-center;
+}
+
+.form-link {
+  @apply text-loomini-blue hover:text-loomini-purple transition-colors duration-200;
+}
+
+.checkbox-container {
+  @apply flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-200;
+}
+
+.checkbox-input {
+  @apply w-5 h-5 text-loomini-blue border-gray-300 rounded focus:ring-loomini-blue focus:ring-2 mt-0.5;
+}
+
+.checkbox-label {
+  @apply text-sm text-gray-700 leading-relaxed;
+}
+
+.spinner {
+  @apply animate-spin rounded-full h-5 w-5 border-b-2 border-white;
 }

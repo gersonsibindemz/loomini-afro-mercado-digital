@@ -64,7 +64,7 @@ const Home = () => {
             <span className="block text-yellow-300">Renda Digital</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto animate-fade-in">
-            A maior plataforma de produtos digitais para criadores africanos. 
+            A maior plataforma de produtos digitais para criadores independentes. 
             Venda cursos, e-books, templates e muito mais.
           </p>
           
@@ -88,12 +88,15 @@ const Home = () => {
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
-              placeholder="O que você quer aprender hoje?"
+              placeholder="Pesquisar produtos..."
               className="w-full pl-12 pr-6 py-4 rounded-xl text-gray-800 text-lg focus:ring-4 focus:ring-white/20 focus:outline-none"
             />
-            <button className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-loomini-blue text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200">
-              Buscar
-            </button>
+            <Link 
+              to="/produtos"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-loomini-blue text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200"
+            >
+              Pesquisar
+            </Link>
           </div>
         </div>
       </section>
@@ -123,7 +126,7 @@ const Home = () => {
               Produtos em Destaque
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Descubra os produtos digitais mais populares criados por talentosos africanos
+              Descubra os produtos digitais mais populares criados por talentosos criadores independentes
             </p>
           </div>
 
@@ -209,7 +212,7 @@ const Home = () => {
             {categories.map((category, index) => (
               <Link 
                 key={index}
-                to={`/categoria/${category.name.toLowerCase().replace(' ', '-')}`}
+                to={`/produtos`}
                 className="loomini-card text-center group hover:shadow-lg transition-all duration-200"
               >
                 <div className="p-6">
@@ -244,11 +247,11 @@ const Home = () => {
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link 
-              to="/como-funciona" 
+              to="/produtos" 
               className="border-2 border-white text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white hover:text-loomini-blue transition-all duration-200 inline-flex items-center justify-center space-x-2"
             >
               <Play className="w-5 h-5" />
-              <span>Como Funciona</span>
+              <span>Explorar Produtos</span>
             </Link>
           </div>
         </div>

@@ -12,6 +12,7 @@ import NotificationSystem, { useNotifications } from "./components/NotificationS
 
 // Pages
 import Home from "./pages/Home";
+import Products from "./pages/Products";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PasswordRecovery from "./pages/PasswordRecovery";
@@ -30,6 +31,7 @@ const AppContent = () => {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/produtos" element={<Products />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/recuperar-senha" element={<PasswordRecovery />} />
