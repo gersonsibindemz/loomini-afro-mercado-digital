@@ -45,6 +45,11 @@
     --sidebar-accent-foreground: 30 41 59;
     --sidebar-border: 229 231 235;
     --sidebar-ring: 59 130 246;
+
+    /* e-Loomini Custom Colors */
+    --loomini-blue: 59 130 246;
+    --loomini-purple: 139 92 246;
+    --loomini-dark: 30 41 59;
   }
 
   .dark {
@@ -84,6 +89,11 @@
     --sidebar-accent-foreground: 248 250 252;
     --sidebar-border: 71 85 105;
     --sidebar-ring: 139 92 246;
+
+    /* e-Loomini Custom Colors for Dark Mode */
+    --loomini-blue: 59 130 246;
+    --loomini-purple: 139 92 246;
+    --loomini-dark: 248 250 252;
   }
 }
 
@@ -117,6 +127,47 @@
   
   .loomini-input {
     @apply w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-loomini-blue focus:border-transparent transition-all duration-200;
+  }
+
+  /* Custom Color Classes */
+  .text-loomini-blue {
+    color: rgb(var(--loomini-blue));
+  }
+  
+  .text-loomini-purple {
+    color: rgb(var(--loomini-purple));
+  }
+  
+  .text-loomini-dark {
+    color: rgb(var(--loomini-dark));
+  }
+  
+  .bg-loomini-blue {
+    background-color: rgb(var(--loomini-blue));
+  }
+  
+  .bg-loomini-purple {
+    background-color: rgb(var(--loomini-purple));
+  }
+  
+  .border-loomini-blue {
+    border-color: rgb(var(--loomini-blue));
+  }
+  
+  .focus\:ring-loomini-blue:focus {
+    --tw-ring-color: rgb(var(--loomini-blue));
+  }
+  
+  .hover\:text-loomini-blue:hover {
+    color: rgb(var(--loomini-blue));
+  }
+  
+  .hover\:text-loomini-purple:hover {
+    color: rgb(var(--loomini-purple));
+  }
+  
+  .hover\:bg-loomini-blue:hover {
+    background-color: rgb(var(--loomini-blue));
   }
 }
 

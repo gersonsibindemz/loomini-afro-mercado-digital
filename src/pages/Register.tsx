@@ -1,40 +1,145 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, Loader2 } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
+import { useNotifications } from '../components/NotificationSystem';
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { addNotification } = useNotifications();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    accountType: 'buyer',
-    agreeTerms: false,
-    agreeMarketing: false
+    isCreator: false,
+    agreeTerms: false
+  });
+  const [errors, setErrors] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    agreeTerms: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Registration attempt:', formData);
-    // Implementar lógica de cadastro
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+  const validateForm = () => {
+    const newErrors = {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      agreeTerms: ''
+    };
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'Este campo é obrigatório';
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Este campo é obrigatório';
+    }
+
+    if (!formData.email) {
+      newErrors.email = 'Este campo é obrigatório';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Este campo é obrigatório';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Este campo é obrigatório';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'As senhas não coincidem';
+    }
+
+    if (!formData.agreeTerms) {
+      newErrors.agreeTerms = 'Deve aceitar os termos e condições';
+    }
+
+    setErrors(newErrors);
+    return Object.values(newErrors).every(error => !error);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Simular criação de conta
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const userData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        role: formData.isCreator ? 'criador' : 'comprador',
+        name: `${formData.firstName} ${formData.lastName}`
+      };
+
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      addNotification({
+        type: 'success',
+        title: 'Conta criada com sucesso!',
+        message: `Bem-vindo ao e-Loomini, ${formData.firstName}!`
+      });
+
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Erro no cadastro',
+        message: 'Ocorreu um erro ao criar sua conta. Tente novamente.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+
+    // Limpar erro quando usuário começar a digitar
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const passwordRequirements = [
-    { text: 'Pelo menos 8 caracteres', met: formData.password.length >= 8 },
+    { text: 'Pelo menos 6 caracteres', met: formData.password.length >= 6 },
     { text: 'Uma letra maiúscula', met: /[A-Z]/.test(formData.password) },
     { text: 'Uma letra minúscula', met: /[a-z]/.test(formData.password) },
     { text: 'Um número', met: /\d/.test(formData.password) }
@@ -43,7 +148,7 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-loomini-gradient-light py-12">
       <div className="max-w-7xl mx-auto px-4">
-        <Breadcrumb items={[{ label: 'Cadastrar' }]} />
+        <Breadcrumb items={[{ label: 'Registar-se' }]} />
         
         <div className="max-w-md mx-auto">
           <div className="loomini-card p-8">
@@ -62,30 +167,56 @@ const Register = () => {
 
             {/* Registration Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name */}
+              {/* First Name */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nome Completo
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nome
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
                     onChange={handleChange}
-                    className="loomini-input pl-10"
-                    placeholder="Seu nome completo"
-                    required
+                    className={`loomini-input pl-10 ${errors.firstName ? 'border-red-500 focus:ring-red-500' : ''}`}
+                    placeholder="Seu nome"
+                    disabled={isLoading}
                   />
                 </div>
+                {errors.firstName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+                )}
+              </div>
+
+              {/* Last Name */}
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Sobrenome
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className={`loomini-input pl-10 ${errors.lastName ? 'border-red-500 focus:ring-red-500' : ''}`}
+                    placeholder="Seu sobrenome"
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.lastName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+                )}
               </div>
 
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  E-mail
+                  Email
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -95,30 +226,14 @@ const Register = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="loomini-input pl-10"
+                    className={`loomini-input pl-10 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                     placeholder="seu@email.com"
-                    required
+                    disabled={isLoading}
                   />
                 </div>
-              </div>
-
-              {/* Account Type */}
-              <div>
-                <label htmlFor="accountType" className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Conta
-                </label>
-                <select
-                  id="accountType"
-                  name="accountType"
-                  value={formData.accountType}
-                  onChange={handleChange}
-                  className="loomini-input"
-                  required
-                >
-                  <option value="buyer">Comprador - Quero comprar produtos</option>
-                  <option value="seller">Vendedor - Quero vender produtos</option>
-                  <option value="both">Ambos - Comprar e vender</option>
-                </select>
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
 
               {/* Password */}
@@ -134,18 +249,22 @@ const Register = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="loomini-input pl-10 pr-10"
+                    className={`loomini-input pl-10 pr-10 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                     placeholder="Crie uma senha forte"
-                    required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
 
                 {/* Password Requirements */}
                 {formData.password && (
@@ -177,25 +296,41 @@ const Register = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="loomini-input pl-10 pr-10"
+                    className={`loomini-input pl-10 pr-10 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}`}
                     placeholder="Confirme sua senha"
-                    required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isLoading}
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-                {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600">As senhas não coincidem</p>
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
                 )}
               </div>
 
-              {/* Terms Agreement */}
+              {/* Creator Checkbox */}
               <div className="space-y-3">
+                <label className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    name="isCreator"
+                    checked={formData.isCreator}
+                    onChange={handleChange}
+                    className="mt-1 rounded border-gray-300 text-loomini-blue focus:ring-loomini-blue"
+                    disabled={isLoading}
+                  />
+                  <span className="text-sm text-gray-600">
+                    Sou um criador de conteúdo e quero vender produtos digitais
+                  </span>
+                </label>
+
+                {/* Terms Agreement */}
                 <label className="flex items-start space-x-3">
                   <input
                     type="checkbox"
@@ -203,7 +338,7 @@ const Register = () => {
                     checked={formData.agreeTerms}
                     onChange={handleChange}
                     className="mt-1 rounded border-gray-300 text-loomini-blue focus:ring-loomini-blue"
-                    required
+                    disabled={isLoading}
                   />
                   <span className="text-sm text-gray-600">
                     Concordo com os{' '}
@@ -216,29 +351,28 @@ const Register = () => {
                     </Link>
                   </span>
                 </label>
-
-                <label className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    name="agreeMarketing"
-                    checked={formData.agreeMarketing}
-                    onChange={handleChange}
-                    className="mt-1 rounded border-gray-300 text-loomini-blue focus:ring-loomini-blue"
-                  />
-                  <span className="text-sm text-gray-600">
-                    Quero receber ofertas especiais e novidades por e-mail
-                  </span>
-                </label>
+                {errors.agreeTerms && (
+                  <p className="mt-1 text-sm text-red-600">{errors.agreeTerms}</p>
+                )}
               </div>
 
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={!formData.agreeTerms || formData.password !== formData.confirmPassword}
+                disabled={isLoading}
                 className="loomini-button w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span>Criar Conta</span>
-                <ArrowRight className="w-5 h-5" />
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Criando conta...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Criar Conta</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </form>
 

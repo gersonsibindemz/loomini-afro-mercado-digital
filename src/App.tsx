@@ -14,6 +14,7 @@ import NotificationSystem, { useNotifications } from "./components/NotificationS
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import PasswordRecovery from "./pages/PasswordRecovery";
 import Dashboard from "./pages/Dashboard";
 import ProductCreation from "./pages/ProductCreation";
 import NotFound from "./pages/NotFound";
@@ -31,6 +32,7 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/recuperar-senha" element={<PasswordRecovery />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/cadastro-produto" element={<ProductCreation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
