@@ -14,20 +14,7 @@ const Footer = () => {
               <span className="text-2xl font-bold">e-Loomini</span>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">A maior plataforma de produtos digitais para criadores independentes. Compre e venda cursos, e-books, templates e muito mais.</p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-loomini-purple transition-colors duration-200">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-loomini-purple transition-colors duration-200">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-loomini-purple transition-colors duration-200">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-loomini-purple transition-colors duration-200">
-                <Youtube className="w-5 h-5" />
-              </a>
-            </div>
+            
           </div>
 
           {/* Marketplace */}
@@ -148,7 +135,7 @@ const Footer = () => {
               <span className="text-gray-400">Aceito em:</span>
               <div className="flex items-center space-x-2">
                 <span className="px-2 py-1 bg-gray-700 rounded text-xs font-mono">MZN</span>
-                <span className="px-2 py-1 bg-gray-700 rounded text-xs font-mono">AOA</span>
+                <span className="px-2 py-1 bg-gray-700 rounded text-xs font-mono">KZ</span>
                 <span className="px-2 py-1 bg-gray-700 rounded text-xs font-mono">BRL</span>
               </div>
             </div>
