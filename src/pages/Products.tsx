@@ -106,7 +106,7 @@ const Products = () => {
     product
   }: {
     product: Product;
-  }) => <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden">
+  }) => <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden bg-lime-50">
       <div className="relative overflow-hidden">
         <img src={product.image} alt={product.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" />
         {product.badge && <Badge className="absolute top-3 left-3 loomini-gradient text-white">
