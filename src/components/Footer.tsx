@@ -1,11 +1,8 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
-
 const Footer = () => {
-  return (
-    <footer className="bg-loomini-dark text-white">
+  return <footer className="bg-loomini-dark text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
@@ -16,10 +13,7 @@ const Footer = () => {
               </div>
               <span className="text-2xl font-bold">e-Loomini</span>
             </div>
-            <p className="text-gray-300 text-sm leading-relaxed">
-              A plataforma líder para criadores africanos venderem produtos digitais. 
-              Conectando talento com oportunidades em Moçambique, Angola e Brasil.
-            </p>
+            <p className="text-gray-300 text-sm leading-relaxed">A maior plataforma de produtos digitais para criadores independentes. Compre e venda cursos, e-books, templates e muito mais.</p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-loomini-purple transition-colors duration-200">
                 <Facebook className="w-5 h-5" />
@@ -161,8 +155,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
