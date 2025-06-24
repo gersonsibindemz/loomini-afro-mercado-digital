@@ -33,9 +33,7 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             
-            <Link to="/produtos" className={`text-sm font-medium transition-colors duration-200 ${isActive('/produtos') ? 'text-loomini-blue' : 'text-gray-600 hover:text-loomini-blue'}`}>
-              Produtos
-            </Link>
+            
             
           </nav>
 
@@ -62,7 +60,7 @@ const Header = () => {
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center space-x-3">
               <Link to="/dashboard" className="p-2 text-gray-600 hover:text-loomini-blue transition-colors duration-200">
-                <ShoppingBag className="w-5 h-5" />
+                
               </Link>
               <Link to="/login" className="px-4 py-2 text-loomini-blue border border-loomini-blue rounded-lg hover:bg-loomini-blue hover:text-white transition-all duration-200">
                 Entrar
