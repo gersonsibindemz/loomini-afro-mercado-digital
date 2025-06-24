@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// e-Loomini custom colors
+				'loomini-blue': '#3B82F6',
+				'loomini-purple': '#8B5CF6',
+				'loomini-light': '#F8FAFC',
+				'loomini-dark': '#1E293B',
+			},
+			backgroundImage: {
+				'loomini-gradient': 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+				'loomini-gradient-light': 'linear-gradient(135deg, #EBF4FF 0%, #F3E8FF 100%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +94,27 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'slide-in-right': {
+					'0%': { transform: 'translateX(100%)' },
+					'100%': { transform: 'translateX(0)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.5s ease-out',
+				'slide-in-right': 'slide-in-right 0.3s ease-out'
 			}
 		}
 	},
