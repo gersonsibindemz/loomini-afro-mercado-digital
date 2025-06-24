@@ -215,7 +215,7 @@ const CreatorDashboard = () => {
                               Excluir
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="bg-slate-800">
                             <AlertDialogHeader>
                               <AlertDialogTitle className="flex items-center space-x-2">
                                 <AlertTriangle className="w-5 h-5 text-red-600" />
