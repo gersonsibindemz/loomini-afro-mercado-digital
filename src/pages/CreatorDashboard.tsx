@@ -15,7 +15,7 @@ import {
   Edit,
   Trash2,
   Star,
-  Switch,
+  ToggleLeft,
   AlertTriangle
 } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
@@ -163,7 +163,7 @@ const CreatorDashboard = () => {
               variant="outline"
               className="flex items-center space-x-2"
             >
-              <Switch className="w-4 h-4" />
+              <ToggleLeft className="w-4 h-4" />
               <span>Alternar para Painel Comprador</span>
             </Button>
 
