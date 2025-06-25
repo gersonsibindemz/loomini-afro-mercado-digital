@@ -13,6 +13,8 @@ import NotificationSystem, { useNotifications } from "./components/NotificationS
 // Pages
 import Home from "./pages/Home";
 import Products from "./pages/Products";
+import ProductDetails from "./pages/ProductDetails";
+import MyPurchases from "./pages/MyPurchases";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PasswordRecovery from "./pages/PasswordRecovery";
@@ -37,6 +39,8 @@ const AppContent = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/produtos" element={<Products />} />
+          <Route path="/produto/:id" element={<ProductDetails />} />
+          <Route path="/minhas-compras" element={<MyPurchases />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/recuperar-senha" element={<PasswordRecovery />} />
