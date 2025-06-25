@@ -22,6 +22,7 @@ import CreatorDashboard from "./pages/CreatorDashboard";
 import ProductCreation from "./pages/ProductCreation";
 import ProductTypeSelection from "./pages/ProductTypeSelection";
 import EbookCreation from "./pages/EbookCreation";
+import CourseCreation from "./pages/CourseCreation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const AppContent = () => {
           <Route path="/cadastro-produto" element={<ProductCreation />} />
           <Route path="/criar-produto" element={<ProductTypeSelection />} />
           <Route path="/criar-ebook" element={<EbookCreation />} />
+          <Route path="/criar-curso" element={<CourseCreation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
