@@ -139,24 +139,27 @@ const QuestionCreationForm: React.FC<QuestionCreationFormProps> = ({ onAddQuesti
         {questionType === 'multiple-choice' && (
           <div className="space-y-4">
             <Label className="text-sm font-medium">Opções de Resposta</Label>
-            <div className="space-y-3">
-              {options.map((option, index) => (
-                <div key={index} className="flex items-center space-x-3">
-                  <RadioGroupItem
-                    value={index.toString()}
-                    id={`option-${index}`}
-                    checked={correctAnswer === index}
-                    onClick={() => setCorrectAnswer(index)}
-                  />
-                  <Input
-                    value={option}
-                    onChange={(e) => updateOption(index, e.target.value)}
-                    placeholder={`Opção ${index + 1}`}
-                    className="flex-1"
-                  />
-                </div>
-              ))}
-            </div>
+            <RadioGroup
+              value={correctAnswer.toString()}
+              onValueChange={(value) => setCorrectAnswer(parseInt(value))}
+            >
+              <div className="space-y-3">
+                {options.map((option, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <RadioGroupItem
+                      value={index.toString()}
+                      id={`option-${index}`}
+                    />
+                    <Input
+                      value={option}
+                      onChange={(e) => updateOption(index, e.target.value)}
+                      placeholder={`Opção ${index + 1}`}
+                      className="flex-1"
+                    />
+                  </div>
+                ))}
+              </div>
+            </RadioGroup>
             {errors.options && (
               <p className="text-red-500 text-xs">{errors.options}</p>
             )}
