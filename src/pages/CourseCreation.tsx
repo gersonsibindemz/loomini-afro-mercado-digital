@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, X, Video, Save, Plus, Trash2, FileText, Play, Clock } from 'lucide-react';
@@ -10,6 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useForm } from 'react-hook-form';
+import AssessmentToggle from '../components/AssessmentToggle';
+import { Assessment } from '../types/assessment';
 
 interface Lesson {
   id: string;
@@ -29,6 +30,7 @@ interface Module {
   name: string;
   lessons: Lesson[];
   materials: SupportMaterial[];
+  assessment: Assessment | null;
 }
 
 interface CourseFormData {
@@ -118,7 +120,8 @@ const CourseCreation = () => {
       id: Math.random().toString(36).substr(2, 9),
       name: newModuleName,
       lessons: [],
-      materials: []
+      materials: [],
+      assessment: null
     };
     
     setModules(prev => [...prev, newModule]);
@@ -127,6 +130,14 @@ const CourseCreation = () => {
 
   const removeModule = (moduleId: string) => {
     setModules(prev => prev.filter(m => m.id !== moduleId));
+  };
+
+  const handleAssessmentChange = (moduleId: string, assessment: Assessment | null) => {
+    setModules(prev => prev.map(module => 
+      module.id === moduleId 
+        ? { ...module, assessment }
+        : module
+    ));
   };
 
   const addLesson = (moduleId: string) => {
@@ -185,7 +196,7 @@ const CourseCreation = () => {
   };
 
   const onSubmit = async (data: CourseFormData) => {
-    // Validate modules
+    // Enhanced validation
     if (modules.length === 0) {
       alert('Curso deve ter pelo menos 1 módulo completo');
       return;
@@ -194,6 +205,15 @@ const CourseCreation = () => {
     const invalidModules = modules.filter(m => !m.name || m.lessons.length === 0);
     if (invalidModules.length > 0) {
       alert('Módulo deve ter título e pelo menos 1 aula');
+      return;
+    }
+
+    // Check for incomplete assessments
+    const incompleteAssessments = modules.filter(m => 
+      m.assessment?.enabled && (!m.assessment.questions || m.assessment.questions.length === 0)
+    );
+    if (incompleteAssessments.length > 0) {
+      alert('Avaliação do módulo incompleta - adicione pelo menos uma pergunta');
       return;
     }
 
@@ -213,6 +233,9 @@ const CourseCreation = () => {
 
   const getTotalLessons = () => modules.reduce((total, module) => total + module.lessons.length, 0);
   const getTotalMaterials = () => modules.reduce((total, module) => total + module.materials.length, 0);
+  const getTotalQuestions = () => modules.reduce((total, module) => 
+    total + (module.assessment?.questions?.length || 0), 0
+  );
 
   return (
     <div className="min-h-screen bg-loomini-gradient-light py-8">
@@ -230,7 +253,7 @@ const CourseCreation = () => {
               Criar Curso
             </h1>
             <p className="text-gray-600">
-              Configure seu curso com módulos e aulas estruturadas
+              Configure seu curso com módulos, aulas e avaliações
             </p>
           </div>
           
@@ -409,6 +432,7 @@ const CourseCreation = () => {
                   </div>
                   <div className="text-sm text-gray-500">
                     {modules.length} módulos, {getTotalLessons()} aulas, {getTotalMaterials()} materiais
+                    {getTotalQuestions() > 0 && `, ${getTotalQuestions()} perguntas`}
                   </div>
                 </CardTitle>
               </CardHeader>
@@ -445,9 +469,14 @@ const CourseCreation = () => {
                           <AccordionTrigger className="text-left">
                             <div className="flex items-center justify-between w-full mr-4">
                               <span className="font-medium">{module.name}</span>
-                              <span className="text-sm text-gray-500">
-                                {module.lessons.length} aulas, {module.materials.length} materiais
-                              </span>
+                              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                                <span>{module.lessons.length} aulas, {module.materials.length} materiais</span>
+                                {module.assessment?.enabled && module.assessment.questions.length > 0 && (
+                                  <span className="text-purple-600 font-medium">
+                                    ✓ {module.assessment.questions.length} perguntas
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="space-y-6">
@@ -596,6 +625,13 @@ const CourseCreation = () => {
                               </div>
                             )}
 
+                            {/* Assessment Section */}
+                            <AssessmentToggle
+                              moduleId={module.id}
+                              assessment={module.assessment}
+                              onAssessmentChange={(assessment) => handleAssessmentChange(module.id, assessment)}
+                            />
+
                             {/* Remove Module */}
                             <div className="pt-4 border-t">
                               <AlertDialog>
@@ -729,8 +765,14 @@ const CourseCreation = () => {
                         <h3 className="font-semibold mb-2">
                           Módulo {moduleIndex + 1}: {module.name}
                         </h3>
-                        <div className="text-sm text-gray-600 mb-3">
-                          {module.lessons.length} aulas, {module.materials.length} materiais
+                        <div className="text-sm text-gray-600 mb-3 flex items-center space-x-4">
+                          <span>{module.lessons.length} aulas</span>
+                          <span>{module.materials.length} materiais</span>
+                          {module.assessment?.enabled && (
+                            <span className="text-purple-600 font-medium">
+                              ✓ {module.assessment.questions.length} perguntas
+                            </span>
+                          )}
                         </div>
                         {module.lessons.map((lesson, lessonIndex) => (
                           <div key={lesson.id} className="ml-4 py-1">
