@@ -1,10 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Star, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/currency';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+
 interface Product {
   id: number;
   title: string;
@@ -18,14 +21,20 @@ interface Product {
   type: 'Curso' | 'E-book' | 'Template' | 'Software';
   badge?: string;
 }
+
 const Products = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedRegion, setSelectedRegion] = useState('Moçambique');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [purchasingProduct, setPurchasingProduct] = useState<number | null>(null);
   const productsPerPage = 12;
+
   const categories = ['Todos', 'Marketing', 'Negócios', 'Tecnologia', 'Finanças', 'Design', 'Agricultura', 'Educação', 'Saúde', 'Idiomas', 'Desenvolvimento Pessoal', 'Música e Produção', 'Arte', 'Moda', 'Espiritualidade', 'Modelos Prontos'];
+  
   const mockProducts: Product[] = [{
     id: 1,
     title: "Curso Completo de Marketing Digital",
@@ -90,6 +99,7 @@ const Products = () => {
     category: "Agricultura",
     type: "Curso"
   }];
+
   const filteredProducts = useMemo(() => {
     return mockProducts.filter(product => {
       const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) || product.creator.toLowerCase().includes(searchTerm.toLowerCase());
@@ -97,21 +107,73 @@ const Products = () => {
       return matchesSearch && matchesCategory;
     });
   }, [searchTerm, selectedCategory]);
+
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * productsPerPage;
     return filteredProducts.slice(startIndex, startIndex + productsPerPage);
   }, [filteredProducts, currentPage]);
+
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-  const ProductCard = ({
-    product
-  }: {
-    product: Product;
-  }) => <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden bg-lime-50">
-      <div className="relative overflow-hidden">
-        <img src={product.image} alt={product.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" />
-        {product.badge && <Badge className="absolute top-3 left-3 loomini-gradient text-white">
+
+  const handleViewDetails = (product: Product) => {
+    navigate(`/produto/${product.type === 'Curso' ? 'curso-1' : 'ebook-1'}`, { 
+      state: { product } 
+    });
+  };
+
+  const handlePurchase = async (product: Product) => {
+    setPurchasingProduct(product.id);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
+      const newPurchase = {
+        ...product,
+        purchaseDate: new Date().toISOString(),
+        purchaseId: Math.random().toString(36).substr(2, 9),
+        currency: selectedRegion === 'Moçambique' ? 'MZN' : 'USD',
+        cover: product.image
+      };
+      purchases.push(newPurchase);
+      localStorage.setItem('purchases', JSON.stringify(purchases));
+      
+      toast({
+        title: "Compra realizada com sucesso!",
+        description: "Produto adicionado à sua biblioteca.",
+      });
+      
+      setTimeout(() => {
+        navigate('/minhas-compras');
+      }, 1500);
+      
+    } catch (error) {
+      toast({
+        title: "Erro na compra",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive"
+      });
+    } finally {
+      setPurchasingProduct(null);
+    }
+  };
+
+  const ProductCard = ({ product }: { product: Product }) => (
+    <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden bg-lime-50">
+      <div 
+        className="relative overflow-hidden"
+        onClick={() => handleViewDetails(product)}
+      >
+        <img 
+          src={product.image} 
+          alt={product.title} 
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" 
+        />
+        {product.badge && (
+          <Badge className="absolute top-3 left-3 loomini-gradient text-white">
             {product.badge}
-          </Badge>}
+          </Badge>
+        )}
         <Badge variant="secondary" className="absolute top-3 right-3">
           {product.type}
         </Badge>
@@ -124,7 +186,10 @@ const Products = () => {
           </Badge>
         </div>
         
-        <h3 className="text-lg font-semibold text-loomini-dark mb-2 group-hover:text-loomini-blue transition-colors duration-200 line-clamp-2">
+        <h3 
+          className="text-lg font-semibold text-loomini-dark mb-2 group-hover:text-loomini-blue transition-colors duration-200 line-clamp-2 cursor-pointer"
+          onClick={() => handleViewDetails(product)}
+        >
           {product.title}
         </h3>
         
@@ -132,7 +197,12 @@ const Products = () => {
         
         <div className="flex items-center mb-3">
           <div className="flex items-center space-x-1">
-            {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}
+            {[...Array(5)].map((_, i) => (
+              <Star 
+                key={i} 
+                className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+              />
+            ))}
           </div>
           <span className="ml-2 text-sm text-gray-600">
             {product.rating} ({product.reviews} avaliações)
@@ -144,23 +214,36 @@ const Products = () => {
             <span className="text-xl font-bold text-loomini-blue">
               {formatCurrency(product.price, selectedRegion)}
             </span>
-            {product.originalPrice && <span className="text-gray-400 line-through text-sm">
+            {product.originalPrice && (
+              <span className="text-gray-400 line-through text-sm">
                 {formatCurrency(product.originalPrice, selectedRegion)}
-              </span>}
+              </span>
+            )}
           </div>
         </div>
         
         <div className="space-y-2">
-          <Button className="w-full loomini-button">
+          <Button 
+            className="w-full loomini-button"
+            onClick={() => handleViewDetails(product)}
+          >
             Ver Detalhes
           </Button>
-          <Button variant="outline" className="w-full text-slate-50 bg-rose-900 hover:bg-rose-800">
-            Comprar Agora
+          <Button 
+            variant="outline" 
+            className="w-full text-slate-50 bg-rose-900 hover:bg-rose-800"
+            onClick={() => handlePurchase(product)}
+            disabled={purchasingProduct === product.id}
+          >
+            {purchasingProduct === product.id ? 'Processando compra...' : 'Comprar Agora'}
           </Button>
         </div>
       </CardContent>
-    </Card>;
-  return <div className="min-h-screen bg-gray-50">
+    </Card>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <section className="loomini-gradient text-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
@@ -175,7 +258,13 @@ const Products = () => {
           
           <div className="max-w-2xl mx-auto relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input type="text" placeholder="Pesquisar produtos..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-12 pr-6 py-4 text-gray-800 text-lg bg-blue-300 rounded-none" />
+            <Input 
+              type="text" 
+              placeholder="Pesquisar produtos..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-6 py-4 text-gray-800 text-lg bg-blue-300 rounded-none" 
+            />
             <Button className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-loomini-blue text-white px-6 py-2 rounded-lg hover:bg-blue-600">
               Pesquisar
             </Button>
@@ -191,7 +280,11 @@ const Products = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
               <div className="flex items-center justify-between mb-4 lg:hidden">
                 <h3 className="font-semibold text-loomini-dark">Filtros</h3>
-                <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowFilters(!showFilters)}
+                >
                   <Filter className="w-4 h-4 mr-2" />
                   <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
                 </Button>
@@ -201,12 +294,22 @@ const Products = () => {
                 <div>
                   <h4 className="font-medium text-loomini-dark mb-3">Filtrar por categoria</h4>
                   <div className="space-y-2">
-                    {categories.map(category => <button key={category} onClick={() => {
-                    setSelectedCategory(category);
-                    setCurrentPage(1);
-                  }} className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${selectedCategory === category ? 'bg-loomini-gradient text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                    {categories.map(category => (
+                      <button
+                        key={category}
+                        onClick={() => {
+                          setSelectedCategory(category);
+                          setCurrentPage(1);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
+                          selectedCategory === category 
+                            ? 'bg-loomini-gradient text-white' 
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
                         {category}
-                      </button>)}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -217,11 +320,15 @@ const Products = () => {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
               <p className="text-gray-600">
-                {filteredProducts.length === 0 ? 'Nenhum produto encontrado' : `${filteredProducts.length} produtos encontrados`}
+                {filteredProducts.length === 0 
+                  ? 'Nenhum produto encontrado' 
+                  : `${filteredProducts.length} produtos encontrados`
+                }
               </p>
             </div>
 
-            {paginatedProducts.length === 0 ? <div className="text-center py-12">
+            {paginatedProducts.length === 0 ? (
+              <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Search className="w-16 h-16 mx-auto" />
                 </div>
@@ -231,31 +338,55 @@ const Products = () => {
                 <p className="text-gray-500">
                   Tente ajustar seus filtros ou termo de pesquisa
                 </p>
-              </div> : <>
+              </div>
+            ) : (
+              <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {paginatedProducts.map(product => <ProductCard key={product.id} product={product} />)}
+                  {paginatedProducts.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && <div className="flex justify-center items-center space-x-2 mt-8">
-                    <Button variant="outline" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center space-x-2 mt-8">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
                       Anterior
                     </Button>
                     
                     <div className="flex space-x-1">
-                      {[...Array(totalPages)].map((_, i) => <Button key={i + 1} variant={currentPage === i + 1 ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(i + 1)}>
+                      {[...Array(totalPages)].map((_, i) => (
+                        <Button
+                          key={i + 1}
+                          variant={currentPage === i + 1 ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
                           {i + 1}
-                        </Button>)}
+                        </Button>
+                      ))}
                     </div>
                     
-                    <Button variant="outline" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
                       Próximo
                     </Button>
-                  </div>}
-              </>}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Products;
