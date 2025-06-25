@@ -20,6 +20,8 @@ import Dashboard from "./pages/Dashboard";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import CreatorDashboard from "./pages/CreatorDashboard";
 import ProductCreation from "./pages/ProductCreation";
+import ProductTypeSelection from "./pages/ProductTypeSelection";
+import EbookCreation from "./pages/EbookCreation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +43,8 @@ const AppContent = () => {
           <Route path="/painel-comprador" element={<BuyerDashboard />} />
           <Route path="/painel-criador" element={<CreatorDashboard />} />
           <Route path="/cadastro-produto" element={<ProductCreation />} />
+          <Route path="/criar-produto" element={<ProductTypeSelection />} />
+          <Route path="/criar-ebook" element={<EbookCreation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
