@@ -31,16 +31,8 @@ const Footer = () => {
                   Categorias
                 </Link>
               </li>
-              <li>
-                <Link to="/top-vendedores" className="text-gray-300 hover:text-loomini-purple transition-colors duration-200 text-sm">
-                  Top Vendedores
-                </Link>
-              </li>
-              <li>
-                <Link to="/novidades" className="text-gray-300 hover:text-loomini-purple transition-colors duration-200 text-sm">
-                  Novidades
-                </Link>
-              </li>
+              
+              
               <li>
                 <Link to="/promocoes" className="text-gray-300 hover:text-loomini-purple transition-colors duration-200 text-sm">
                   Promoções
