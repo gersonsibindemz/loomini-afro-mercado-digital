@@ -234,7 +234,7 @@ const CourseCreation = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Informações Básicas */}
-            <Card className="bg-slate-200">
+            <Card className="bg-slate-300">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Video className="w-5 h-5" />
