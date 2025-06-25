@@ -3,11 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, TrendingUp, Users, Globe, Star, ArrowRight, Play } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
 import { useToast } from '@/hooks/use-toast';
-
 const Home = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const featuredProducts = [{
     id: 1,
     title: "Curso Completo de Marketing Digital",
@@ -45,7 +45,6 @@ const Home = () => {
     category: "Design",
     type: "Template" as const
   }];
-
   const categories = [{
     name: "Cursos Online",
     count: 234,
@@ -71,7 +70,6 @@ const Home = () => {
     count: 145,
     icon: "🎬"
   }];
-
   const stats = [{
     number: "10K+",
     label: "Produtos Digitais",
@@ -89,18 +87,18 @@ const Home = () => {
     label: "Países Atendidos",
     icon: "🌍"
   }];
-
   const handleViewDetails = (product: any) => {
-    navigate(`/produto/${product.type === 'Curso' ? 'curso-1' : 'ebook-1'}`, { 
-      state: { product } 
+    navigate(`/produto/${product.type === 'Curso' ? 'curso-1' : 'ebook-1'}`, {
+      state: {
+        product
+      }
     });
   };
-
   const handlePurchase = async (product: any) => {
     try {
       // Simulate purchase processing
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Save to localStorage (simulate purchase)
       const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
       const newPurchase = {
@@ -112,17 +110,15 @@ const Home = () => {
       };
       purchases.push(newPurchase);
       localStorage.setItem('purchases', JSON.stringify(purchases));
-      
       toast({
         title: "Compra realizada com sucesso!",
-        description: "Produto adicionado à sua biblioteca.",
+        description: "Produto adicionado à sua biblioteca."
       });
-      
+
       // Redirect to purchases page
       setTimeout(() => {
         navigate('/minhas-compras');
       }, 1500);
-      
     } catch (error) {
       toast({
         title: "Erro na compra",
@@ -131,9 +127,7 @@ const Home = () => {
       });
     }
   };
-
-  return (
-    <div className="min-h-screen">
+  return <div className="min-h-screen">
       {/* Hero Section */}
       <section className="loomini-gradient text-white py-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -170,15 +164,13 @@ const Home = () => {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
+            {stats.map((stat, index) => <div key={index} className="text-center">
                 <div className="text-4xl mb-2">{stat.icon}</div>
                 <div className="text-3xl md:text-4xl font-bold text-loomini-blue mb-2">
                   {stat.number}
                 </div>
                 <div className="text-gray-600 font-medium">{stat.label}</div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -196,41 +188,23 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map(product => (
-              <div key={product.id} className="loomini-card group cursor-pointer">
-                <div 
-                  className="relative overflow-hidden rounded-t-xl"
-                  onClick={() => handleViewDetails(product)}
-                >
-                  <img 
-                    src={product.image} 
-                    alt={product.title} 
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" 
-                  />
-                  {product.badge && (
-                    <span className="absolute top-3 left-3 bg-loomini-gradient text-white px-3 py-1 rounded-full text-sm font-semibold">
+            {featuredProducts.map(product => <div key={product.id} className="loomini-card group cursor-pointer">
+                <div className="relative overflow-hidden rounded-t-xl" onClick={() => handleViewDetails(product)}>
+                  <img src={product.image} alt={product.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" />
+                  {product.badge && <span className="absolute top-3 left-3 bg-loomini-gradient text-white px-3 py-1 rounded-full text-sm font-semibold">
                       {product.badge}
-                    </span>
-                  )}
+                    </span>}
                 </div>
                 
                 <div className="p-6">
-                  <h3 
-                    className="text-xl font-bold text-loomini-dark mb-2 group-hover:text-loomini-blue transition-colors duration-200 cursor-pointer"
-                    onClick={() => handleViewDetails(product)}
-                  >
+                  <h3 className="text-xl font-bold text-loomini-dark mb-2 group-hover:text-loomini-blue transition-colors duration-200 cursor-pointer" onClick={() => handleViewDetails(product)}>
                     {product.title}
                   </h3>
                   <p className="text-gray-600 mb-3">por {product.author}</p>
                   
                   <div className="flex items-center mb-3">
                     <div className="flex items-center space-x-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-                        />
-                      ))}
+                      {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}
                     </div>
                     <span className="ml-2 text-sm text-gray-600">
                       {product.rating} ({product.reviews} avaliações)
@@ -242,31 +216,20 @@ const Home = () => {
                       <span className="text-2xl font-bold text-loomini-blue">
                         {formatCurrency(product.price)}
                       </span>
-                      {product.originalPrice && (
-                        <span className="text-gray-400 line-through">
+                      {product.originalPrice && <span className="text-gray-400 line-through">
                           {formatCurrency(product.originalPrice)}
-                        </span>
-                      )}
+                        </span>}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <button 
-                      onClick={() => handleViewDetails(product)}
-                      className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                    >
+                    <button onClick={() => handleViewDetails(product)} className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200">
                       Ver Detalhes
                     </button>
-                    <button 
-                      onClick={() => handlePurchase(product)}
-                      className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors duration-200"
-                    >
-                      Comprar Agora
-                    </button>
+                    
                   </div>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
 
           <div className="text-center mt-12">
@@ -300,8 +263,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
-
 export default Home;
