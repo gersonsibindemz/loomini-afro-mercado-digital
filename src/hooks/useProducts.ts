@@ -28,7 +28,9 @@ export interface CreateProductData {
   description_short: string;
   description_full?: string;
   price: number;
+  currency?: string;
   category: string;
+  language?: string;
   level: string;
   type: 'ebook' | 'course';
   pages?: number;
@@ -37,6 +39,7 @@ export interface CreateProductData {
 
 export const useProducts = () => {
   const { addNotification } = useNotifications();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const {
@@ -63,9 +66,21 @@ export const useProducts = () => {
 
   const createProduct = useMutation({
     mutationFn: async (productData: CreateProductData) => {
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Prepare data with creator_id from authenticated user
+      const dataToInsert = {
+        ...productData,
+        creator_id: user.id,
+        currency: productData.currency || 'MZN',
+        language: productData.language || 'Português'
+      };
+
       const { data, error } = await supabase
         .from('products')
-        .insert([productData])
+        .insert([dataToInsert])
         .select()
         .single();
 
@@ -135,6 +150,10 @@ export const useCreatorProducts = () => {
 
   const updateProduct = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Product> }) => {
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { data, error } = await supabase
         .from('products')
         .update(updates)
@@ -169,6 +188,10 @@ export const useCreatorProducts = () => {
 
   const deleteProduct = useMutation({
     mutationFn: async (id: string) => {
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { error } = await supabase
         .from('products')
         .delete()

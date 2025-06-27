@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
+import { useProducts, CreateProductData } from '@/hooks/useProducts';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EbookFormData {
   title: string;
@@ -24,7 +26,8 @@ interface EbookFormData {
 
 const EbookCreation = () => {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const { createProduct, isCreating } = useProducts();
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -86,34 +89,35 @@ const EbookCreation = () => {
   };
 
   const onSubmit = async (data: EbookFormData) => {
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    console.log('E-book data:', data);
-    
-    // Show success message and redirect
-    alert('E-book criado com sucesso!');
-    navigate('/dashboard');
-    
-    setIsSubmitting(false);
-  };
+    if (!user) {
+      alert('Você precisa estar logado para criar um produto');
+      return;
+    }
 
-  const validateForm = (data: EbookFormData) => {
-    const errors: any = {};
-    
-    if (!data.title) errors.title = 'Este campo é obrigatório';
-    if (!data.category) errors.category = 'Este campo é obrigatório';
-    if (!data.shortDescription) errors.shortDescription = 'Este campo é obrigatório';
-    if (!data.fullDescription) errors.fullDescription = 'Este campo é obrigatório';
-    if (!data.price) errors.price = 'Este campo é obrigatório';
-    else if (parseFloat(data.price) <= 0) errors.price = 'Preço deve ser maior que zero';
-    if (!data.pages) errors.pages = 'Este campo é obrigatório';
-    else if (parseInt(data.pages) < 1) errors.pages = 'Número de páginas deve ser pelo menos 1';
-    if (!data.coverImage) errors.coverImage = 'Este campo é obrigatório';
-    
-    return errors;
+    if (!data.coverImage) {
+      alert('Por favor, adicione uma capa para o e-book');
+      return;
+    }
+
+    // Prepare product data according to CreateProductData interface
+    const productData: CreateProductData = {
+      title: data.title,
+      description_short: data.shortDescription,
+      description_full: data.fullDescription,
+      price: parseFloat(data.price),
+      currency: data.currency,
+      category: data.category,
+      language: data.language,
+      level: data.difficulty,
+      type: 'ebook',
+      pages: parseInt(data.pages)
+    };
+
+    createProduct(productData, {
+      onSuccess: () => {
+        navigate('/dashboard');
+      }
+    });
   };
 
   return (
@@ -418,10 +422,10 @@ const EbookCreation = () => {
 
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isCreating}
                 className="loomini-button flex items-center space-x-2"
               >
-                {isSubmitting ? (
+                {isCreating ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Criando E-book...</span>
