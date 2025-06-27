@@ -1,13 +1,12 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, Loader2 } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
-import { useNotifications } from '../components/NotificationSystem';
+import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { addNotification } = useNotifications();
+  const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,35 +87,20 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      // Simular criação de conta
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const userData = {
+      await signUp(formData.email, formData.password, {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        email: formData.email,
-        role: formData.isCreator ? 'criador' : 'comprador',
-        name: `${formData.firstName} ${formData.lastName}`
-      };
-
-      localStorage.setItem('user', JSON.stringify(userData));
-
-      addNotification({
-        type: 'success',
-        title: 'Conta criada com sucesso!',
-        message: `Bem-vindo ao e-Loomini, ${formData.firstName}!`
+        isCreator: formData.isCreator
       });
 
+      // Navigate to login after successful registration
       setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
+        navigate('/login');
+      }, 2000);
 
     } catch (error) {
-      addNotification({
-        type: 'error',
-        title: 'Erro no cadastro',
-        message: 'Ocorreu um erro ao criar sua conta. Tente novamente.'
-      });
+      // Error handling is done in the signUp function
+      console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
     }
