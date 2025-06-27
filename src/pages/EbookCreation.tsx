@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, X, Book, Save } from 'lucide-react';
@@ -10,6 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { useProducts, CreateProductData } from '@/hooks/useProducts';
 import { useAuth } from '@/contexts/AuthContext';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import Badge from '@/components/ui/badge';
 
 interface EbookFormData {
   title: string;
@@ -28,8 +29,10 @@ const EbookCreation = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { createProduct, isCreating } = useProducts();
+  const { uploadImage, isUploading } = useImageUpload();
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
   const form = useForm<EbookFormData>({
     defaultValues: {
@@ -56,8 +59,8 @@ const EbookCreation = () => {
   const difficulties = ['Iniciante', 'Intermediário', 'Avançado'];
   const currencies = ['MZN', 'AOA'];
 
-  const handleImageUpload = (file: File) => {
-    if (file && file.type.startsWith('image/')) {
+  const handleImageUpload = async (file: File) => {
+    if (file && file.type.startsWith('image/') && user) {
       form.setValue('coverImage', file);
       
       const reader = new FileReader();
@@ -65,6 +68,12 @@ const EbookCreation = () => {
         setCoverPreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Upload to Supabase Storage
+      const imageUrl = await uploadImage(file, user.id);
+      if (imageUrl) {
+        setUploadedImageUrl(imageUrl);
+      }
     }
   };
 
@@ -110,7 +119,8 @@ const EbookCreation = () => {
       language: data.language,
       level: data.difficulty,
       type: 'ebook',
-      pages: parseInt(data.pages)
+      pages: parseInt(data.pages),
+      cover_image_url: uploadedImageUrl // Use uploaded image URL
     };
 
     createProduct(productData, {
@@ -261,7 +271,12 @@ const EbookCreation = () => {
                           onDragOver={handleDrag}
                           onDrop={handleDrop}
                         >
-                          {coverPreview ? (
+                          {isUploading ? (
+                            <div className="flex flex-col items-center">
+                              <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
+                              <p className="text-blue-600">Carregando imagem...</p>
+                            </div>
+                          ) : coverPreview ? (
                             <div className="relative inline-block">
                               <img
                                 src={coverPreview}
@@ -272,12 +287,20 @@ const EbookCreation = () => {
                                 type="button"
                                 onClick={() => {
                                   setCoverPreview(null);
+                                  setUploadedImageUrl(null);
                                   form.setValue('coverImage', null);
                                 }}
                                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                               >
                                 <X className="w-3 h-3" />
                               </button>
+                              {uploadedImageUrl && (
+                                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+                                  <Badge className="bg-green-500 text-white text-xs">
+                                    Upload concluído!
+                                  </Badge>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <>
@@ -422,13 +445,18 @@ const EbookCreation = () => {
 
               <Button
                 type="submit"
-                disabled={isCreating}
+                disabled={isCreating || isUploading}
                 className="loomini-button flex items-center space-x-2"
               >
                 {isCreating ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Criando E-book...</span>
+                  </>
+                ) : isUploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Enviando imagem...</span>
                   </>
                 ) : (
                   <>
