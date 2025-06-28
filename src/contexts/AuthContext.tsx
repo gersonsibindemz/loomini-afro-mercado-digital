@@ -1,45 +1,12 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotifications } from '@/components/NotificationSystem';
+import { UserProfile, AuthContextType } from '@/types/auth';
+import { fetchUserProfile, updateUserProfile, uploadUserAvatar } from '@/services/authService';
 
-interface UserProfile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: 'comprador' | 'criador';
-  avatar_url?: string;
-  bio?: string;
-  social_links?: Record<string, string>;
-  portfolio_url?: string;
-  created_at: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  profile: UserProfile | null;
-  session: Session | null;
-  loading: boolean;
-  signUp: (email: string, password: string, userData: { firstName: string; lastName: string; isCreator: boolean }) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
-  switchRole: (newRole: 'comprador' | 'criador') => Promise<void>;
-  uploadAvatar: (file: File) => Promise<string>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
-  return context;
-};
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -54,7 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        loadUserProfile(session.user.id);
       }
       setLoading(false);
     });
@@ -65,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        await loadUserProfile(session.user.id);
       } else {
         setProfile(null);
       }
@@ -75,27 +42,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  const loadUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Erro ao buscar perfil do usuário:', error);
+      const profileData = await fetchUserProfile(userId);
+      if (profileData) {
+        setProfile(profileData);
+      } else {
         addNotification({
           type: 'error',
           title: 'Erro ao carregar perfil',
           message: 'Não foi possível carregar os dados do usuário'
         });
-        return;
       }
-
-      setProfile(data);
     } catch (error) {
-      console.error('Erro inesperado ao buscar perfil:', error);
+      console.error('Erro ao carregar perfil:', error);
     }
   };
 
@@ -220,14 +180,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      await fetchUserProfile(user.id);
+      await updateUserProfile(user.id, updates);
+      await loadUserProfile(user.id);
       addNotification({
         type: 'success',
         title: 'Perfil atualizado',
@@ -247,14 +201,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ role: newRole })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      await fetchUserProfile(user.id);
+      await updateUserProfile(user.id, { role: newRole });
+      await loadUserProfile(user.id);
       addNotification({
         type: 'success',
         title: 'Papel alterado!',
@@ -280,23 +228,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('user-avatars')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('user-avatars')
-        .getPublicUrl(fileName);
-
-      // Update user profile with new avatar URL
-      await updateProfile({ avatar_url: data.publicUrl });
-
-      return data.publicUrl;
+      const avatarUrl = await uploadUserAvatar(user.id, file);
+      await updateProfile({ avatar_url: avatarUrl });
+      return avatarUrl;
     } catch (error: any) {
       addNotification({
         type: 'error',
