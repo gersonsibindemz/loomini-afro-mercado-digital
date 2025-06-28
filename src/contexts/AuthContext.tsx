@@ -11,6 +11,9 @@ interface UserProfile {
   email: string;
   role: 'comprador' | 'criador';
   avatar_url?: string;
+  bio?: string;
+  social_links?: Record<string, string>;
+  portfolio_url?: string;
   created_at: string;
 }
 
@@ -24,6 +27,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  switchRole: (newRole: 'comprador' | 'criador') => Promise<void>;
+  uploadAvatar: (file: File) => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -124,6 +129,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: 'Conta criada com sucesso!',
         message: 'Verifique seu email para confirmar a conta'
       });
+
+      // Redirect to appropriate dashboard after successful signup
+      const dashboardRoute = userData.isCreator ? '/painel-criador' : '/painel-comprador';
+      setTimeout(() => {
+        window.location.href = dashboardRoute;
+      }, 2000);
     } catch (error: any) {
       addNotification({
         type: 'error',
@@ -232,6 +243,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const switchRole = async (newRole: 'comprador' | 'criador') => {
+    if (!user) throw new Error('Usuário não autenticado');
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ role: newRole })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      await fetchUserProfile(user.id);
+      addNotification({
+        type: 'success',
+        title: 'Papel alterado!',
+        message: `Agora você é um ${newRole}`
+      });
+
+      // Redirect to appropriate dashboard
+      const dashboardRoute = newRole === 'criador' ? '/painel-criador' : '/painel-comprador';
+      setTimeout(() => {
+        window.location.href = dashboardRoute;
+      }, 1500);
+    } catch (error: any) {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao alterar papel',
+        message: 'Não foi possível alterar seu papel'
+      });
+      throw error;
+    }
+  };
+
+  const uploadAvatar = async (file: File): Promise<string> => {
+    if (!user) throw new Error('Usuário não autenticado');
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('user-avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('user-avatars')
+        .getPublicUrl(fileName);
+
+      // Update user profile with new avatar URL
+      await updateProfile({ avatar_url: data.publicUrl });
+
+      return data.publicUrl;
+    } catch (error: any) {
+      addNotification({
+        type: 'error',
+        title: 'Erro no upload',
+        message: 'Não foi possível fazer upload da imagem'
+      });
+      throw error;
+    }
+  };
+
   const value = {
     user,
     profile,
@@ -241,7 +316,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     resetPassword,
-    updateProfile
+    updateProfile,
+    switchRole,
+    uploadAvatar
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
