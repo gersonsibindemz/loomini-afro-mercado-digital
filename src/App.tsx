@@ -18,6 +18,7 @@ import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
 import MyPurchases from "./pages/MyPurchases";
+import Cart from "./pages/Cart";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PasswordRecovery from "./pages/PasswordRecovery";
@@ -56,6 +57,7 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/produtos" element={<Products />} />
           <Route path="/produto/:id" element={<ProductDetails />} />
+          <Route path="/carrinho" element={<Cart />} />
           <Route path="/minhas-compras" element={<MyPurchases />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

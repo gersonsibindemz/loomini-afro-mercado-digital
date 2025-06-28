@@ -1,116 +1,296 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, Globe, User, ShoppingBag } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, User, LogOut, ShoppingCart, Bell, Settings } from 'lucide-react';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { useShoppingCart } from '@/hooks/useShoppingCart';
+
 const Header = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState('Moçambique');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { getItemCount } = useShoppingCart();
+  const navigate = useNavigate();
   const location = useLocation();
-  const regions = [{
-    name: 'Moçambique',
-    currency: 'MZN',
-    flag: '🇲🇿'
-  }, {
-    name: 'Angola',
-    currency: 'AOA',
-    flag: '🇦🇴'
-  }, {
-    name: 'Brasil',
-    currency: 'BRL',
-    flag: '🇧🇷'
-  }];
-  const isActive = (path: string) => location.pathname === path;
-  return <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
+  const cartItemCount = getItemCount();
+
+  const navigationItems = [
+    { label: 'Início', path: '/' },
+    { label: 'Produtos', path: '/produtos' },
+  ];
+
+  if (user) {
+    navigationItems.push(
+      { label: 'Minhas Compras', path: '/minhas-compras' },
+      { label: 'Dashboard', path: '/dashboard' }
+    );
+  }
+
+  const mobileMenu = (
+    <div className="md:hidden">
+      <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-50">
+        {navigationItems.map((item) => (
+          <Link
+            key={item.label}
+            to={item.path}
+            onClick={() => setIsMenuOpen(false)}
+            className="block px-3 py-2 text-gray-700 hover:text-loomini-blue"
+          >
+            {item.label}
+          </Link>
+        ))}
+
+        <div className="px-3 py-2 space-y-2">
+          {user ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                handleSignOut();
+                setIsMenuOpen(false);
+              }}
+              className="w-full"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
+            </Button>
+          ) : (
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigate('/login');
+                  setIsMenuOpen(false);
+                }}
+                className="w-full"
+              >
+                Entrar
+              </Button>
+              <Button
+                size="sm"
+                className="w-full loomini-button"
+                onClick={() => {
+                  navigate('/register');
+                  setIsMenuOpen(false);
+                }}
+              >
+                Cadastrar
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            
-            <span className="text-2xl font-bold text-loomini-dark text-sky-700">e-Loomini</span>
+            <div className="text-2xl font-bold loomini-gradient bg-clip-text text-transparent">
+              e-Loomini
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            
-            
-            
+            <Link 
+              to="/" 
+              className={`text-gray-700 hover:text-loomini-blue transition-colors ${location.pathname === '/' ? 'text-loomini-blue font-semibold' : ''}`}
+            >
+              Início
+            </Link>
+            <Link 
+              to="/produtos" 
+              className={`text-gray-700 hover:text-loomini-blue transition-colors ${location.pathname === '/produtos' ? 'text-loomini-blue font-semibold' : ''}`}
+            >
+              Produtos
+            </Link>
+            {user && (
+              <>
+                <Link 
+                  to="/minhas-compras" 
+                  className={`text-gray-700 hover:text-loomini-blue transition-colors ${location.pathname === '/minhas-compras' ? 'text-loomini-blue font-semibold' : ''}`}
+                >
+                  Minhas Compras
+                </Link>
+                <Link 
+                  to="/dashboard" 
+                  className={`text-gray-700 hover:text-loomini-blue transition-colors ${location.pathname === '/dashboard' ? 'text-loomini-blue font-semibold' : ''}`}
+                >
+                  Dashboard
+                </Link>
+              </>
+            )}
           </nav>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              
-              
-            </div>
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Cart Icon */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/carrinho')}
+              className="relative"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {cartItemCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                >
+                  {cartItemCount}
+                </Badge>
+              )}
+            </Button>
+
+            {user ? (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">
+                  Olá, {user.user_metadata?.first_name || user.email}
+                </span>
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" onClick={() => navigate('/login')}>
+                  Entrar
+                </Button>
+                <Button size="sm" className="loomini-button" onClick={() => navigate('/register')}>
+                  Cadastrar
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Region Selector & Actions */}
-          <div className="flex items-center space-x-4">
-            {/* Region Selector */}
-            <div className="relative">
-              <select value={selectedRegion} onChange={e => setSelectedRegion(e.target.value)} className="appearance-none bg-white border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium focus:ring-2 focus:ring-loomini-blue focus:border-transparent cursor-pointer">
-                {regions.map(region => <option key={region.name} value={region.name}>
-                    {region.flag} {region.name}
-                  </option>)}
-              </select>
-              <Globe className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
-            </div>
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center space-x-2">
+            {/* Mobile Cart Icon */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/carrinho')}
+              className="relative"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {cartItemCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                >
+                  {cartItemCount}
+                </Badge>
+              )}
+            </Button>
 
-            {/* Desktop Actions */}
-            <div className="hidden md:flex items-center space-x-3">
-              <Link to="/dashboard" className="p-2 text-gray-600 hover:text-loomini-blue transition-colors duration-200">
-                
-              </Link>
-              <Link to="/login" className="px-4 py-2 text-loomini-blue border border-loomini-blue rounded-lg hover:bg-loomini-blue hover:text-white transition-all duration-200">
-                Entrar
-              </Link>
-              <Link to="/register" className="loomini-button">
-                Cadastrar
-              </Link>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-2 text-gray-600 hover:text-loomini-blue transition-colors duration-200">
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-md text-gray-700 hover:text-loomini-blue"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && <div className="md:hidden border-t border-gray-100 py-4 animate-fade-in">
-            {/* Mobile Search */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input type="text" placeholder="Procurar produtos..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-loomini-blue focus:border-transparent" />
-            </div>
-
-            {/* Mobile Navigation */}
-            <nav className="space-y-2 mb-4">
-              <Link to="/" className={`block px-4 py-2 rounded-lg transition-colors duration-200 ${isActive('/') ? 'bg-loomini-gradient-light text-loomini-blue' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setIsMobileMenuOpen(false)}>
+        {isMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-50">
+              <Link 
+                to="/" 
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-3 py-2 text-gray-700 hover:text-loomini-blue"
+              >
                 Início
               </Link>
-              <Link to="/produtos" className={`block px-4 py-2 rounded-lg transition-colors duration-200 ${isActive('/produtos') ? 'bg-loomini-gradient-light text-loomini-blue' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setIsMobileMenuOpen(false)}>
+              <Link 
+                to="/produtos" 
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-3 py-2 text-gray-700 hover:text-loomini-blue"
+              >
                 Produtos
               </Link>
-              <Link to="/categorias" className={`block px-4 py-2 rounded-lg transition-colors duration-200 ${isActive('/categorias') ? 'bg-loomini-gradient-light text-loomini-blue' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setIsMobileMenuOpen(false)}>
-                Categorias
-              </Link>
-            </nav>
-
-            {/* Mobile Actions */}
-            <div className="space-y-2">
-              <Link to="/dashboard" className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200" onClick={() => setIsMobileMenuOpen(false)}>
-                <ShoppingBag className="w-5 h-5" />
-                <span>Meus Produtos</span>
-              </Link>
-              <Link to="/login" className="block px-4 py-2 text-center border border-loomini-blue text-loomini-blue rounded-lg hover:bg-loomini-blue hover:text-white transition-all duration-200" onClick={() => setIsMobileMenuOpen(false)}>
-                Entrar
-              </Link>
-              <Link to="/register" className="block px-4 py-2 text-center loomini-button" onClick={() => setIsMobileMenuOpen(false)}>
-                Cadastrar
-              </Link>
+              {user && (
+                <>
+                  <Link 
+                    to="/minhas-compras" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-3 py-2 text-gray-700 hover:text-loomini-blue"
+                  >
+                    Minhas Compras
+                  </Link>
+                  <Link 
+                    to="/dashboard" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-3 py-2 text-gray-700 hover:text-loomini-blue"
+                  >
+                    Dashboard
+                  </Link>
+                </>
+              )}
+              
+              <div className="px-3 py-2 space-y-2">
+                {user ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sair
+                  </Button>
+                ) : (
+                  <div className="space-y-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        navigate('/login');
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full"
+                    >
+                      Entrar
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="w-full loomini-button" 
+                      onClick={() => {
+                        navigate('/register');
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Cadastrar
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>}
+          </div>
+        )}
       </div>
-    </header>;
+    </header>
+  );
 };
+
 export default Header;

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Star, ChevronDown } from 'lucide-react';
+import { Search, Filter, Star, ChevronDown, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/currency';
 import { Card, CardContent } from '../components/ui/card';
@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useShoppingCart } from '@/hooks/useShoppingCart';
 
 interface Product {
   id: number;
@@ -25,6 +26,8 @@ interface Product {
 const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addToCart, isInCart, getItemCount } = useShoppingCart();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedRegion, setSelectedRegion] = useState('Moçambique');
@@ -121,126 +124,112 @@ const Products = () => {
     });
   };
 
-  const handlePurchase = async (product: Product) => {
-    setPurchasingProduct(product.id);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
-      const newPurchase = {
-        ...product,
-        purchaseDate: new Date().toISOString(),
-        purchaseId: Math.random().toString(36).substr(2, 9),
-        currency: selectedRegion === 'Moçambique' ? 'MZN' : 'USD',
-        cover: product.image
-      };
-      purchases.push(newPurchase);
-      localStorage.setItem('purchases', JSON.stringify(purchases));
-      
-      toast({
-        title: "Compra realizada com sucesso!",
-        description: "Produto adicionado à sua biblioteca.",
-      });
-      
-      setTimeout(() => {
-        navigate('/minhas-compras');
-      }, 1500);
-      
-    } catch (error) {
-      toast({
-        title: "Erro na compra",
-        description: "Tente novamente mais tarde.",
-        variant: "destructive"
-      });
-    } finally {
-      setPurchasingProduct(null);
-    }
+  const handleAddToCart = (product: Product) => {
+    const cartItem = {
+      id: product.id.toString(),
+      title: product.title,
+      price: product.price,
+      currency: selectedRegion === 'Moçambique' ? 'MZN' : 'USD',
+      cover_image_url: product.image,
+      type: product.type === 'Curso' ? 'course' as const : 'ebook' as const
+    };
+
+    addToCart(cartItem);
   };
 
-  const ProductCard = ({ product }: { product: Product }) => (
-    <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden bg-lime-50">
-      <div 
-        className="relative overflow-hidden"
-        onClick={() => handleViewDetails(product)}
-      >
-        <img 
-          src={product.image} 
-          alt={product.title} 
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" 
-        />
-        {product.badge && (
-          <Badge className="absolute top-3 left-3 loomini-gradient text-white">
-            {product.badge}
-          </Badge>
-        )}
-        <Badge variant="secondary" className="absolute top-3 right-3">
-          {product.type}
-        </Badge>
-      </div>
-      
-      <CardContent className="p-4">
-        <div className="mb-2">
-          <Badge variant="outline" className="text-xs">
-            {product.category}
-          </Badge>
-        </div>
-        
-        <h3 
-          className="text-lg font-semibold text-loomini-dark mb-2 group-hover:text-loomini-blue transition-colors duration-200 line-clamp-2 cursor-pointer"
+  const ProductCard = ({ product }: { product: Product }) => {
+    const inCart = isInCart(product.id.toString());
+    
+    return (
+      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden bg-lime-50">
+        <div 
+          className="relative overflow-hidden"
           onClick={() => handleViewDetails(product)}
         >
-          {product.title}
-        </h3>
-        
-        <p className="text-gray-600 mb-3 text-sm">por {product.creator}</p>
-        
-        <div className="flex items-center mb-3">
-          <div className="flex items-center space-x-1">
-            {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-              />
-            ))}
-          </div>
-          <span className="ml-2 text-sm text-gray-600">
-            {product.rating} ({product.reviews} avaliações)
-          </span>
+          <img 
+            src={product.image} 
+            alt={product.title} 
+            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" 
+          />
+          {product.badge && (
+            <Badge className="absolute top-3 left-3 loomini-gradient text-white">
+              {product.badge}
+            </Badge>
+          )}
+          <Badge variant="secondary" className="absolute top-3 right-3">
+            {product.type}
+          </Badge>
         </div>
         
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-xl font-bold text-loomini-blue">
-              {formatCurrency(product.price, selectedRegion)}
-            </span>
-            {product.originalPrice && (
-              <span className="text-gray-400 line-through text-sm">
-                {formatCurrency(product.originalPrice, selectedRegion)}
-              </span>
-            )}
+        <CardContent className="p-4">
+          <div className="mb-2">
+            <Badge variant="outline" className="text-xs">
+              {product.category}
+            </Badge>
           </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Button 
-            className="w-full loomini-button"
+          
+          <h3 
+            className="text-lg font-semibold text-loomini-dark mb-2 group-hover:text-loomini-blue transition-colors duration-200 line-clamp-2 cursor-pointer"
             onClick={() => handleViewDetails(product)}
           >
-            Ver Detalhes
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full text-slate-50 bg-rose-900 hover:bg-rose-800"
-            onClick={() => handlePurchase(product)}
-            disabled={purchasingProduct === product.id}
-          >
-            {purchasingProduct === product.id ? 'Processando compra...' : 'Comprar Agora'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+            {product.title}
+          </h3>
+          
+          <p className="text-gray-600 mb-3 text-sm">por {product.creator}</p>
+          
+          <div className="flex items-center mb-3">
+            <div className="flex items-center space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <Star 
+                  key={i} 
+                  className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                />
+              ))}
+            </div>
+            <span className="ml-2 text-sm text-gray-600">
+              {product.rating} ({product.reviews} avaliações)
+            </span>
+          </div>
+          
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-xl font-bold text-loomini-blue">
+                {formatCurrency(product.price, selectedRegion)}
+              </span>
+              {product.originalPrice && (
+                <span className="text-gray-400 line-through text-sm">
+                  {formatCurrency(product.originalPrice, selectedRegion)}
+                </span>
+              )}
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Button 
+              className="w-full loomini-button"
+              onClick={() => handleViewDetails(product)}
+            >
+              Ver Detalhes
+            </Button>
+            <Button 
+              variant="outline" 
+              className={`w-full ${inCart ? 'bg-green-50 text-green-700 border-green-300' : 'text-slate-50 bg-rose-900 hover:bg-rose-800'}`}
+              onClick={() => {
+                if (inCart) {
+                  navigate('/carrinho');
+                } else {
+                  handleAddToCart(product);
+                }
+              }}
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              {inCart ? 'Ver no Carrinho' : 'Adicionar ao Carrinho'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -255,6 +244,20 @@ const Products = () => {
             A maior plataforma de produtos digitais para criadores independentes. 
             Venda cursos, e-books, templates e muito mais.
           </p>
+          
+          {/* Cart indicator */}
+          {getItemCount() > 0 && (
+            <div className="mb-4">
+              <Button 
+                onClick={() => navigate('/carrinho')}
+                variant="outline"
+                className="bg-white text-loomini-blue border-white hover:bg-gray-100"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Carrinho ({getItemCount()})
+              </Button>
+            </div>
+          )}
           
           <div className="max-w-2xl mx-auto relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
