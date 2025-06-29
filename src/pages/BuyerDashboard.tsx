@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useBuyerData } from '@/hooks/useBuyerData';
 import BuyerDashboardActions from '@/components/BuyerDashboardActions';
 import { 
@@ -139,7 +139,7 @@ const BuyerDashboard = () => {
                   </div>
                   
                   <div className="flex space-x-2">
-                    {purchase.products?.type === 'curso' ? (
+                    {purchase.products?.type === 'course' ? (
                       <button className="px-4 py-2 bg-loomini-blue text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2">
                         <Eye className="w-4 h-4" />
                         <span>Acessar</span>
