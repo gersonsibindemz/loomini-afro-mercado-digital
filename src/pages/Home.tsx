@@ -3,48 +3,77 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, TrendingUp, Users, Globe, Star, ArrowRight, Play } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
 import { useToast } from '@/hooks/use-toast';
+
 const Home = () => {
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
-  const featuredProducts = [{
-    id: 1,
-    title: "Curso Completo de Marketing Digital",
-    author: "Ana Silva",
-    creator: "Ana Silva",
-    price: 2500,
-    originalPrice: 3500,
-    rating: 4.8,
-    reviews: 234,
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop",
-    badge: "Bestseller",
-    category: "Marketing",
-    type: "Curso" as const
-  }, {
-    id: 2,
-    title: "E-book: Empreendedorismo em África",
-    author: "João Mateus",
-    creator: "João Mateus",
-    price: 850,
-    rating: 4.9,
-    reviews: 156,
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-    badge: "Novo",
-    category: "Negócios",
-    type: "E-book" as const
-  }, {
-    id: 3,
-    title: "Templates para Redes Sociais",
-    author: "Maria Costa",
-    creator: "Maria Costa",
-    price: 1200,
-    rating: 4.7,
-    reviews: 89,
-    image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=300&fit=crop",
-    category: "Design",
-    type: "Template" as const
-  }];
+  const { toast } = useToast();
+
+  const featuredProducts = [
+    {
+      id: 1,
+      title: "Curso Completo de Marketing Digital",
+      author: "Ana Silva",
+      creator: "Ana Silva",
+      price: 2500,
+      originalPrice: 3500,
+      rating: 4.8,
+      reviews: 234,
+      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=400&fit=crop",
+      badge: "Bestseller",
+      category: "Marketing",
+      type: "Curso" as const
+    },
+    {
+      id: 2,
+      title: "E-book: Empreendedorismo em África",
+      author: "João Mateus",
+      creator: "João Mateus",
+      price: 850,
+      rating: 4.9,
+      reviews: 156,
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+      badge: "Novo",
+      category: "Negócios",
+      type: "E-book" as const
+    },
+    {
+      id: 3,
+      title: "Templates para Redes Sociais",
+      author: "Maria Costa",
+      creator: "Maria Costa",
+      price: 1200,
+      rating: 4.7,
+      reviews: 89,
+      image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=400&fit=crop",
+      category: "Design",
+      type: "Template" as const
+    },
+    {
+      id: 4,
+      title: "Curso de Programação Python",
+      author: "Carlos Santos",
+      creator: "Carlos Santos",
+      price: 1800,
+      rating: 4.6,
+      reviews: 312,
+      image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=400&fit=crop",
+      category: "Tecnologia",
+      type: "Curso" as const
+    },
+    {
+      id: 5,
+      title: "Gestão Financeira Pessoal",
+      author: "Lucia Fernandes",
+      creator: "Lucia Fernandes",
+      price: 900,
+      rating: 4.5,
+      reviews: 178,
+      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=400&fit=crop",
+      category: "Finanças",
+      type: "E-book" as const
+    }
+  ];
+
   const categories = [{
     name: "Cursos Online",
     count: 234,
@@ -70,6 +99,7 @@ const Home = () => {
     count: 145,
     icon: "🎬"
   }];
+
   const stats = [{
     number: "10K+",
     label: "Produtos Digitais",
@@ -87,6 +117,7 @@ const Home = () => {
     label: "Países Atendidos",
     icon: "🌍"
   }];
+
   const handleViewDetails = (product: any) => {
     navigate(`/produto/${product.type === 'Curso' ? 'curso-1' : 'ebook-1'}`, {
       state: {
@@ -94,6 +125,7 @@ const Home = () => {
       }
     });
   };
+
   const handlePurchase = async (product: any) => {
     try {
       // Simulate purchase processing
@@ -127,7 +159,9 @@ const Home = () => {
       });
     }
   };
-  return <div className="min-h-screen">
+
+  return (
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section className="loomini-gradient text-white py-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -164,13 +198,15 @@ const Home = () => {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => <div key={index} className="text-center">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
                 <div className="text-4xl mb-2">{stat.icon}</div>
                 <div className="text-3xl md:text-4xl font-bold text-loomini-blue mb-2">
                   {stat.number}
                 </div>
                 <div className="text-gray-600 font-medium">{stat.label}</div>
-              </div>)}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -187,49 +223,60 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map(product => <div key={product.id} className="loomini-card group cursor-pointer">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {featuredProducts.map(product => (
+              <div key={product.id} className="loomini-card group cursor-pointer">
                 <div className="relative overflow-hidden rounded-t-xl" onClick={() => handleViewDetails(product)}>
-                  <img src={product.image} alt={product.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" />
-                  {product.badge && <span className="absolute top-3 left-3 bg-loomini-gradient text-white px-3 py-1 rounded-full text-sm font-semibold">
+                  <img 
+                    src={product.image} 
+                    alt={product.title} 
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" 
+                  />
+                  {product.badge && (
+                    <span className="absolute top-3 left-3 bg-loomini-gradient text-white px-3 py-1 rounded-full text-sm font-semibold">
                       {product.badge}
-                    </span>}
+                    </span>
+                  )}
                 </div>
                 
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-loomini-dark mb-2 group-hover:text-loomini-blue transition-colors duration-200 cursor-pointer" onClick={() => handleViewDetails(product)}>
+                <div className="p-4">
+                  <h3 className="text-lg font-bold text-loomini-dark mb-2 group-hover:text-loomini-blue transition-colors duration-200 cursor-pointer line-clamp-2" onClick={() => handleViewDetails(product)}>
                     {product.title}
                   </h3>
-                  <p className="text-gray-600 mb-3">por {product.author}</p>
+                  <p className="text-gray-600 mb-3 text-sm">por {product.author}</p>
                   
                   <div className="flex items-center mb-3">
                     <div className="flex items-center space-x-1">
-                      {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />)}
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                      ))}
                     </div>
-                    <span className="ml-2 text-sm text-gray-600">
-                      {product.rating} ({product.reviews} avaliações)
+                    <span className="ml-2 text-xs text-gray-600">
+                      {product.rating} ({product.reviews})
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-2xl font-bold text-loomini-blue">
+                    <div className="flex flex-col">
+                      <span className="text-lg font-bold text-loomini-blue">
                         {formatCurrency(product.price)}
                       </span>
-                      {product.originalPrice && <span className="text-gray-400 line-through">
+                      {product.originalPrice && (
+                        <span className="text-gray-400 line-through text-sm">
                           {formatCurrency(product.originalPrice)}
-                        </span>}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <button onClick={() => handleViewDetails(product)} className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                    <button onClick={() => handleViewDetails(product)} className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm">
                       Ver Detalhes
                     </button>
-                    
                   </div>
                 </div>
-              </div>)}
+              </div>
+            ))}
           </div>
 
           <div className="text-center mt-12">
@@ -263,6 +310,8 @@ const Home = () => {
           </div>
         </div>
       </section>
-    </div>;
+    </div>
+  );
 };
+
 export default Home;
