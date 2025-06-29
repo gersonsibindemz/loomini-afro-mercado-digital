@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut, ShoppingCart, Bell, Settings } from 'lucide-react';
@@ -99,9 +100,9 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="text-2xl font-bold loomini-gradient bg-clip-text text-transparent">
-              e-Loomini
+          <Link to="/" className="flex items-center space-x-2 select-none">
+            <div className="text-2xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+              e-Loomini Education
             </div>
           </Link>
 

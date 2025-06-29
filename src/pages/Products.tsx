@@ -46,7 +46,7 @@ const Products = () => {
     originalPrice: 3500,
     rating: 4.8,
     reviews: 234,
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=400&fit=crop",
     category: "Marketing",
     type: "Curso",
     badge: "Bestseller"
@@ -57,7 +57,7 @@ const Products = () => {
     price: 850,
     rating: 4.9,
     reviews: 156,
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
     category: "Negócios",
     type: "E-book",
     badge: "Novo"
@@ -68,7 +68,7 @@ const Products = () => {
     price: 1200,
     rating: 4.7,
     reviews: 89,
-    image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=400&fit=crop",
     category: "Design",
     type: "Template"
   }, {
@@ -78,7 +78,7 @@ const Products = () => {
     price: 1800,
     rating: 4.6,
     reviews: 312,
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=400&fit=crop",
     category: "Tecnologia",
     type: "Curso"
   }, {
@@ -88,7 +88,7 @@ const Products = () => {
     price: 900,
     rating: 4.5,
     reviews: 178,
-    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=400&fit=crop",
     category: "Finanças",
     type: "E-book"
   }, {
@@ -98,7 +98,7 @@ const Products = () => {
     price: 1500,
     rating: 4.4,
     reviews: 92,
-    image: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&h=400&fit=crop",
     category: "Agricultura",
     type: "Curso"
   }];
@@ -344,7 +344,7 @@ const Products = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                   {paginatedProducts.map(product => (
                     <ProductCard key={product.id} product={product} />
                   ))}
