@@ -103,22 +103,32 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-white text-foreground font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: white !important;
+  }
+
+  html {
+    background-color: white !important;
+  }
+
+  #root {
+    background-color: white !important;
   }
 }
 
 @layer components {
   .loomini-gradient {
-    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%) !important;
   }
   
   .loomini-gradient-light {
-    background: linear-gradient(135deg, #EBF4FF 0%, #F3E8FF 100%);
+    background: linear-gradient(135deg, #EBF4FF 0%, #F3E8FF 100%) !important;
   }
   
   .loomini-card {
     @apply bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200;
+    background-color: white !important;
   }
   
   .loomini-button {
@@ -127,6 +137,7 @@
   
   .loomini-input {
     @apply w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-loomini-blue focus:border-transparent transition-all duration-200;
+    background-color: white !important;
   }
 
   /* Text truncation utilities */
@@ -214,6 +225,7 @@
 /* Form Styles */
 .form-container {
   @apply max-w-md mx-auto bg-white p-8 rounded-2xl shadow-lg border border-gray-100;
+  background-color: white !important;
 }
 
 .form-title {
@@ -230,6 +242,7 @@
 
 .form-input {
   @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-loomini-blue focus:border-loomini-blue transition-all duration-200 text-gray-900;
+  background-color: white !important;
 }
 
 .form-input.error {
