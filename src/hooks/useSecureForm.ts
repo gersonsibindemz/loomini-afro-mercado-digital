@@ -147,9 +147,3 @@ export const useSecureForm = <T extends Record<string, ValidationRule>>(
     isValid: Object.values(fields).every(field => !field.error)
   };
 };
-</rov-write>
-
-Now I need to install the DOMPurify dependency for HTML sanitization:
-
-<lov-add-dependency>dompurify@latest</lov-add-dependency>
-<lov-add-dependency>@types/dompurify@latest</lov-add-dependency>
