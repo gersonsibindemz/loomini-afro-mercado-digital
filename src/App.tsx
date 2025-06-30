@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Context Providers
 import { AuthProvider } from "./contexts/AuthContext";
+import { SecurityProvider } from "./components/SecurityProvider";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Layout Components
 import Header from "./components/Header";
@@ -31,6 +33,9 @@ import EbookCreation from "./pages/EbookCreation";
 import CourseCreation from "./pages/CourseCreation";
 import NotFound from "./pages/NotFound";
 
+// Error handling
+import { reportError } from "./utils/errorHandling";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -41,6 +46,16 @@ const queryClient = new QueryClient({
           return false;
         }
         return failureCount < 3;
+      },
+      onError: (error) => {
+        console.error('Query error:', error);
+        reportError(error instanceof Error ? error : new Error(String(error)));
+      }
+    },
+    mutations: {
+      onError: (error) => {
+        console.error('Mutation error:', error);
+        reportError(error instanceof Error ? error : new Error(String(error)));
       }
     }
   }
@@ -50,51 +65,95 @@ const AppContent = () => {
   const { notifications, removeNotification } = useNotifications();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/produtos" element={<Products />} />
-          <Route path="/produto/:id" element={<ProductDetails />} />
-          <Route path="/carrinho" element={<Cart />} />
-          <Route path="/minhas-compras" element={<MyPurchases />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/recuperar-senha" element={<PasswordRecovery />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/painel-comprador" element={<BuyerDashboard />} />
-          <Route path="/painel-criador" element={<CreatorDashboard />} />
-          <Route path="/cadastro-produto" element={<ProductCreation />} />
-          <Route path="/criar-produto" element={<ProductTypeSelection />} />
-          <Route path="/criar-ebook" element={<EbookCreation />} />
-          <Route path="/criar-curso" element={<CourseCreation />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-      <Footer />
-      
-      <NotificationSystem 
-        notifications={notifications} 
-        onRemove={removeNotification} 
-      />
-    </div>
+    <SecurityProvider>
+      <div className="min-h-screen flex flex-col">
+        <ErrorBoundary showDetails={true}>
+          <Header />
+        </ErrorBoundary>
+        
+        <main className="flex-1">
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/produtos" element={<Products />} />
+              <Route path="/produto/:id" element={<ProductDetails />} />
+              <Route path="/carrinho" element={<Cart />} />
+              <Route path="/minhas-compras" element={<MyPurchases />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/recuperar-senha" element={<PasswordRecovery />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/painel-comprador" element={<BuyerDashboard />} />
+              <Route path="/painel-criador" element={<CreatorDashboard />} />
+              <Route path="/cadastro-produto" element={<ProductCreation />} />
+              <Route path="/criar-produto" element={<ProductTypeSelection />} />
+              <Route path="/criar-ebook" element={<EbookCreation />} />
+              <Route path="/criar-curso" element={<CourseCreation />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
+        </main>
+        
+        <ErrorBoundary>
+          <Footer />
+        </ErrorBoundary>
+        
+        <NotificationSystem 
+          notifications={notifications} 
+          onRemove={removeNotification} 
+        />
+      </div>
+    </SecurityProvider>
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const handleGlobalError = (error: Error, errorInfo: any) => {
+    console.error('Global app error:', error, errorInfo);
+    reportError(error, { errorInfo, location: 'App' });
+  };
+
+  return (
+    <ErrorBoundary onError={handleGlobalError} showDetails={true}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ErrorBoundary onError={(error) => reportError(error, { location: 'AuthProvider' })}>
+            <AuthProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AppContent />
+              </BrowserRouter>
+            </AuthProvider>
+          </ErrorBoundary>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;
+
+// Global error handler for unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  reportError(
+    event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
+    { type: 'unhandledrejection' }
+  );
+});
+
+// Global error handler for uncaught errors
+window.addEventListener('error', (event) => {
+  console.error('Uncaught error:', event.error);
+  reportError(
+    event.error instanceof Error ? event.error : new Error(event.message),
+    { 
+      type: 'uncaughterror',
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno
+    }
+  );
+});
