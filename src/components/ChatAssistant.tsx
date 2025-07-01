@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { MessageCircle, X, Minus, Send, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import MobileChatOverlay from './MobileChatOverlay';
+import MobileChatOverlay from './MobileChatAssistant';
 
 interface Message {
   id: string;
