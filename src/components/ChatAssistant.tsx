@@ -26,11 +26,80 @@ const ChatAssistant: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [hasNotification, setHasNotification] = useState(true);
+  const [hasNotification, setHasNotification] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
+  const [showChatBubble, setShowChatBubble] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize audio on component mount
+  useEffect(() => {
+    // Create a simple water balloon burst sound using Web Audio API
+    const createBurstSound = () => {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      const playBurstSound = () => {
+        // Create oscillators for the burst effect
+        const oscillator1 = audioContext.createOscillator();
+        const oscillator2 = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        // Connect nodes
+        oscillator1.connect(gainNode);
+        oscillator2.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Configure the burst sound
+        oscillator1.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator1.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+        
+        oscillator2.frequency.setValueAtTime(400, audioContext.currentTime);
+        oscillator2.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.15);
+        
+        // Volume envelope for burst effect
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        
+        // Start and stop oscillators
+        oscillator1.start(audioContext.currentTime);
+        oscillator1.stop(audioContext.currentTime + 0.2);
+        
+        oscillator2.start(audioContext.currentTime + 0.05);
+        oscillator2.stop(audioContext.currentTime + 0.25);
+      };
+      
+      return playBurstSound;
+    };
+
+    try {
+      const playSound = createBurstSound();
+      audioRef.current = { play: playSound } as any;
+    } catch (error) {
+      console.warn('Audio context not available:', error);
+    }
+  }, []);
+
+  // Show chat bubble after 20 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowChatBubble(true);
+      setHasNotification(true);
+      
+      // Play burst sound when bubble appears
+      if (audioRef.current && typeof audioRef.current.play === 'function') {
+        try {
+          audioRef.current.play();
+        } catch (error) {
+          console.warn('Could not play sound:', error);
+        }
+      }
+    }, 20000); // 20 seconds
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const knowledgeBase: KnowledgeBase = {
     'criar_conta': {
@@ -256,6 +325,11 @@ const ChatAssistant: React.FC = () => {
     });
   };
 
+  // Don't render anything if chat bubble hasn't appeared yet
+  if (!showChatBubble) {
+    return null;
+  }
+
   // Mobile overlay for full-screen experience
   if (isMobile && isOpen) {
     return createPortal(
@@ -283,7 +357,7 @@ const ChatAssistant: React.FC = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="relative bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 group"
+          className="relative bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 group animate-bounce"
           aria-label="Abrir chat de ajuda"
         >
           <MessageCircle size={24} />
