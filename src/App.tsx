@@ -14,6 +14,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import NotificationSystem, { useNotifications } from "./components/NotificationSystem";
+import ChatAssistant from "./components/ChatAssistant";
 
 // Pages
 import Home from "./pages/Home";
@@ -96,6 +97,8 @@ const AppContent = () => {
           notifications={notifications} 
           onRemove={removeNotification} 
         />
+        
+        <ChatAssistant />
       </div>
     </SecurityProvider>
   );
