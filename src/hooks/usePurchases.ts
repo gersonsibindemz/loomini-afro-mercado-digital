@@ -1,5 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotifications } from '@/components/NotificationSystem';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,7 +28,8 @@ export const usePurchases = () => {
   const {
     data: purchases,
     isLoading,
-    error
+    error,
+    isError
   } = useQuery({
     queryKey: ['purchases', user?.id],
     queryFn: async () => {
@@ -54,8 +56,20 @@ export const usePurchases = () => {
 
       return data as Purchase[];
     },
-    enabled: !!user
+    enabled: !!user,
+    retry: 2,
+    staleTime: 5 * 60 * 1000
   });
+
+  useEffect(() => {
+    if (isError && error) {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao carregar compras',
+        message: 'Não foi possível carregar suas compras. Tente novamente.'
+      });
+    }
+  }, [isError, error, addNotification]);
 
   const createPurchase = useMutation({
     mutationFn: async ({ productId, amount }: { productId: string; amount: number }) => {

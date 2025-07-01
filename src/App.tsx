@@ -46,17 +46,10 @@ const queryClient = new QueryClient({
           return false;
         }
         return failureCount < 3;
-      },
-      onError: (error) => {
-        console.error('Query error:', error);
-        reportError(error instanceof Error ? error : new Error(String(error)));
       }
     },
     mutations: {
-      onError: (error) => {
-        console.error('Mutation error:', error);
-        reportError(error instanceof Error ? error : new Error(String(error)));
-      }
+      retry: 1
     }
   }
 });

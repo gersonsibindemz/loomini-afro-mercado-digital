@@ -1,5 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotifications } from '@/components/NotificationSystem';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,7 +32,8 @@ export const useReviews = (productId: string) => {
   const {
     data: reviews,
     isLoading,
-    error
+    error,
+    isError
   } = useQuery({
     queryKey: ['reviews', productId],
     queryFn: async () => {
@@ -50,8 +52,20 @@ export const useReviews = (productId: string) => {
       }
 
       return data as Review[];
-    }
+    },
+    retry: 2,
+    staleTime: 5 * 60 * 1000
   });
+
+  useEffect(() => {
+    if (isError && error) {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao carregar avaliações',
+        message: 'Não foi possível carregar as avaliações. Tente novamente.'
+      });
+    }
+  }, [isError, error, addNotification]);
 
   const createReview = useMutation({
     mutationFn: async (reviewData: CreateReviewData) => {

@@ -35,7 +35,8 @@ export const useAdvancedSearch = () => {
   const {
     data: searchResults,
     isLoading,
-    error
+    error,
+    isError
   } = useQuery({
     queryKey: ['advanced-search', filters, currentPage],
     queryFn: async () => {
@@ -109,7 +110,9 @@ export const useAdvancedSearch = () => {
         products: data as Product[],
         totalCount: count || 0
       };
-    }
+    },
+    retry: 2,
+    staleTime: 2 * 60 * 1000
   });
 
   const totalPages = Math.ceil((searchResults?.totalCount || 0) / itemsPerPage);

@@ -1,12 +1,15 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/components/NotificationSystem';
 
 export const useCreatorData = () => {
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
 
-  const { data: products, isLoading: isLoadingProducts } = useQuery({
+  const { data: products, isLoading: isLoadingProducts, error: productsError, isError: isProductsError } = useQuery({
     queryKey: ['creator-products', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -20,10 +23,12 @@ export const useCreatorData = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user
+    enabled: !!user,
+    retry: 2,
+    staleTime: 5 * 60 * 1000
   });
 
-  const { data: sales, isLoading: isLoadingSales } = useQuery({
+  const { data: sales, isLoading: isLoadingSales, error: salesError, isError: isSalesError } = useQuery({
     queryKey: ['creator-sales', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -43,8 +48,30 @@ export const useCreatorData = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user
+    enabled: !!user,
+    retry: 2,
+    staleTime: 5 * 60 * 1000
   });
+
+  useEffect(() => {
+    if (isProductsError && productsError) {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao carregar produtos',
+        message: 'Não foi possível carregar seus produtos. Tente novamente.'
+      });
+    }
+  }, [isProductsError, productsError, addNotification]);
+
+  useEffect(() => {
+    if (isSalesError && salesError) {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao carregar vendas',
+        message: 'Não foi possível carregar suas vendas. Tente novamente.'
+      });
+    }
+  }, [isSalesError, salesError, addNotification]);
 
   const totalRevenue = sales?.reduce((sum, sale) => sum + Number(sale.amount_paid), 0) || 0;
   const totalSales = sales?.length || 0;

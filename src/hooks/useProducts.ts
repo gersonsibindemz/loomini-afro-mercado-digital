@@ -45,7 +45,8 @@ export const useProducts = () => {
   const {
     data: products,
     isLoading,
-    error
+    error,
+    isError
   } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
@@ -61,8 +62,20 @@ export const useProducts = () => {
       }
 
       return data as Product[];
-    }
+    },
+    retry: 2,
+    staleTime: 5 * 60 * 1000
   });
+
+  useEffect(() => {
+    if (isError && error) {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao carregar produtos',
+        message: 'Não foi possível carregar os produtos. Tente novamente.'
+      });
+    }
+  }, [isError, error, addNotification]);
 
   const createProduct = useMutation({
     mutationFn: async (productData: CreateProductData) => {
@@ -126,7 +139,8 @@ export const useCreatorProducts = () => {
   const {
     data: products,
     isLoading,
-    error
+    error,
+    isError
   } = useQuery({
     queryKey: ['creator-products', user?.id],
     queryFn: async () => {
@@ -145,8 +159,20 @@ export const useCreatorProducts = () => {
 
       return data as Product[];
     },
-    enabled: !!user
+    enabled: !!user,
+    retry: 2,
+    staleTime: 5 * 60 * 1000
   });
+
+  useEffect(() => {
+    if (isError && error) {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao carregar seus produtos',
+        message: 'Não foi possível carregar seus produtos. Tente novamente.'
+      });
+    }
+  }, [isError, error, addNotification]);
 
   const updateProduct = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Product> }) => {

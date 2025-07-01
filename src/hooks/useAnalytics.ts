@@ -1,7 +1,9 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/components/NotificationSystem';
 
 export interface AnalyticsData {
   totalRevenue: number;
@@ -19,11 +21,13 @@ export interface AnalyticsData {
 
 export const useAnalytics = () => {
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
 
   const {
     data: analytics,
     isLoading,
-    error
+    error,
+    isError
   } = useQuery({
     queryKey: ['analytics', user?.id],
     queryFn: async (): Promise<AnalyticsData> => {
@@ -131,8 +135,20 @@ export const useAnalytics = () => {
         recentSales
       };
     },
-    enabled: !!user
+    enabled: !!user,
+    retry: 2,
+    staleTime: 10 * 60 * 1000
   });
+
+  useEffect(() => {
+    if (isError && error) {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao carregar analytics',
+        message: 'Não foi possível carregar os dados de analytics. Tente novamente.'
+      });
+    }
+  }, [isError, error, addNotification]);
 
   return {
     analytics,
