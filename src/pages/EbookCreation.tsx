@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form';
 import { useProducts, CreateProductData } from '@/hooks/useProducts';
 import { useAuth } from '@/contexts/AuthContext';
 import { useImageUpload } from '@/hooks/useImageUpload';
-import { Badge } from "/dev-server/src/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 interface EbookFormData {
   title: string;
