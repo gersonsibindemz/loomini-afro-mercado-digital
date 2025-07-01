@@ -4,14 +4,12 @@ import { MessageCircle, X, Minus, Send, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileChatOverlay from './MobileChatAssistant';
-
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
 }
-
 interface KnowledgeBase {
   [key: string]: {
     keywords: string[];
@@ -19,7 +17,6 @@ interface KnowledgeBase {
     quickActions?: string[];
   };
 }
-
 const ChatAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -30,7 +27,9 @@ const ChatAssistant: React.FC = () => {
   const [showQuickActions, setShowQuickActions] = useState(true);
   const [showChatBubble, setShowChatBubble] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const isMobile = useIsMobile();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -39,44 +38,41 @@ const ChatAssistant: React.FC = () => {
     // Create a simple water balloon burst sound using Web Audio API
     const createBurstSound = () => {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
       const playBurstSound = () => {
         // Create oscillators for the burst effect
         const oscillator1 = audioContext.createOscillator();
         const oscillator2 = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
+
         // Connect nodes
         oscillator1.connect(gainNode);
         oscillator2.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
+
         // Configure the burst sound
         oscillator1.frequency.setValueAtTime(800, audioContext.currentTime);
         oscillator1.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
-        
         oscillator2.frequency.setValueAtTime(400, audioContext.currentTime);
         oscillator2.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.15);
-        
+
         // Volume envelope for burst effect
         gainNode.gain.setValueAtTime(0, audioContext.currentTime);
         gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        
+
         // Start and stop oscillators
         oscillator1.start(audioContext.currentTime);
         oscillator1.stop(audioContext.currentTime + 0.2);
-        
         oscillator2.start(audioContext.currentTime + 0.05);
         oscillator2.stop(audioContext.currentTime + 0.25);
       };
-      
       return playBurstSound;
     };
-
     try {
       const playSound = createBurstSound();
-      audioRef.current = { play: playSound } as any;
+      audioRef.current = {
+        play: playSound
+      } as any;
     } catch (error) {
       console.warn('Audio context not available:', error);
     }
@@ -87,7 +83,7 @@ const ChatAssistant: React.FC = () => {
     const timer = setTimeout(() => {
       setShowChatBubble(true);
       setHasNotification(true);
-      
+
       // Play burst sound when bubble appears
       if (audioRef.current && typeof audioRef.current.play === 'function') {
         try {
@@ -100,7 +96,6 @@ const ChatAssistant: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
   const knowledgeBase: KnowledgeBase = {
     'criar_conta': {
       keywords: ['criar conta', 'registrar', 'cadastrar', 'sign up', 'registro'],
@@ -203,31 +198,23 @@ const ChatAssistant: React.FC = () => {
       quickActions: ['Encontrar Criadores', 'Participar Fóruns']
     }
   };
-
-  const quickActionButtons = user?.role === 'criador' 
-    ? ['Criar Produto', 'Painel Criador', 'Suporte Técnico']
-    : ['Como Comprar', 'Ver Produtos', 'Suporte Técnico'];
-
+  const quickActionButtons = user?.role === 'criador' ? ['Criar Produto', 'Painel Criador', 'Suporte Técnico'] : ['Como Comprar', 'Ver Produtos', 'Suporte Técnico'];
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
   };
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
   useEffect(() => {
     if (isOpen && hasNotification) {
       setHasNotification(false);
     }
   }, [isOpen]);
-
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      const welcomeMessage = user 
-        ? `Olá ${user.first_name}! 👋 Sou o assistente do e-Loomini. Como posso ajudá-lo hoje?`
-        : 'Olá! 👋 Bem-vindo ao e-Loomini. Sou seu assistente virtual. Como posso ajudá-lo hoje?';
-      
+      const welcomeMessage = user ? `Olá ${user.first_name}! 👋 Sou o assistente do e-Loomini. Como posso ajudá-lo hoje?` : 'Olá! 👋 Bem-vindo ao e-Loomini. Sou seu assistente virtual. Como posso ajudá-lo hoje?';
       setMessages([{
         id: Date.now().toString(),
         text: welcomeMessage,
@@ -236,10 +223,8 @@ const ChatAssistant: React.FC = () => {
       }]);
     }
   }, [isOpen, user]);
-
   const findBestMatch = (input: string): string | null => {
     const lowerInput = input.toLowerCase();
-    
     for (const [key, data] of Object.entries(knowledgeBase)) {
       if (data.keywords.some(keyword => lowerInput.includes(keyword))) {
         return key;
@@ -247,36 +232,29 @@ const ChatAssistant: React.FC = () => {
     }
     return null;
   };
-
   const getAssistantResponse = (userInput: string): string => {
     const match = findBestMatch(userInput);
-    
     if (match) {
       return knowledgeBase[match].response;
     }
-    
+
     // Fallback responses
     if (userInput.toLowerCase().includes('obrigad')) {
       return '😊 De nada! Fico feliz em ajudar. Há mais alguma coisa que posso esclarecer?';
     }
-    
     if (userInput.toLowerCase().includes('tchau') || userInput.toLowerCase().includes('até')) {
       return '👋 Até logo! Sempre que precisar, estarei aqui para ajudar. Tenha um ótimo dia!';
     }
-    
     return `Entendo sua dúvida, mas preciso de um especialista para te ajudar melhor! 🤔\n\nPara questões específicas como esta, recomendo entrar em contato com nosso suporte:\n\n📱 **WhatsApp:** +258 84 123 4567\n\n💬 **Nosso especialista pode ajudar com:**\n• Problemas técnicos específicos\n• Questões de pagamento\n• Suporte personalizado\n• Dúvidas complexas\n\n🕐 **Horário:** Segunda a sexta, 8h às 18h`;
   };
-
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
-
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputValue,
       sender: 'user',
       timestamp: new Date()
     };
-
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsTyping(true);
@@ -284,7 +262,6 @@ const ChatAssistant: React.FC = () => {
 
     // Simulate AI thinking time
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-
     const assistantResponse = getAssistantResponse(inputValue);
     const assistantMessage: Message = {
       id: (Date.now() + 1).toString(),
@@ -292,16 +269,13 @@ const ChatAssistant: React.FC = () => {
       sender: 'assistant',
       timestamp: new Date()
     };
-
     setIsTyping(false);
     setMessages(prev => [...prev, assistantMessage]);
   };
-
   const handleQuickAction = (action: string) => {
     handleSendMessage();
     setInputValue(action);
   };
-
   const handleEscalation = () => {
     const escalationMessage: Message = {
       id: Date.now().toString(),
@@ -309,10 +283,8 @@ const ChatAssistant: React.FC = () => {
       sender: 'assistant',
       timestamp: new Date()
     };
-    
     setMessages(prev => [...prev, escalationMessage]);
   };
-
   const formatMessage = (text: string) => {
     return text.split('\n').map((line, index) => {
       if (line.startsWith('**') && line.endsWith('**')) {
@@ -332,50 +304,22 @@ const ChatAssistant: React.FC = () => {
 
   // Mobile overlay for full-screen experience
   if (isMobile && isOpen) {
-    return createPortal(
-      <MobileChatOverlay
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        messages={messages}
-        inputValue={inputValue}
-        setInputValue={setInputValue}
-        onSendMessage={handleSendMessage}
-        isTyping={isTyping}
-        showQuickActions={showQuickActions}
-        quickActionButtons={quickActionButtons}
-        onQuickAction={handleQuickAction}
-        onEscalation={handleEscalation}
-        formatMessage={formatMessage}
-      />,
-      document.body
-    );
+    return createPortal(<MobileChatOverlay isOpen={isOpen} onClose={() => setIsOpen(false)} messages={messages} inputValue={inputValue} setInputValue={setInputValue} onSendMessage={handleSendMessage} isTyping={isTyping} showQuickActions={showQuickActions} quickActionButtons={quickActionButtons} onQuickAction={handleQuickAction} onEscalation={handleEscalation} formatMessage={formatMessage} />, document.body);
   }
 
   // Desktop widget
-  const chatWidget = (
-    <div className="fixed bottom-5 right-5 z-[1000]">
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="relative bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 group animate-bounce"
-          aria-label="Abrir chat de ajuda"
-        >
+  const chatWidget = <div className="fixed bottom-5 right-5 z-[1000]">
+      {!isOpen && <button onClick={() => setIsOpen(true)} aria-label="Abrir chat de ajuda" className="relative bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 group font-normal">
           <MessageCircle size={24} />
-          {hasNotification && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
+          {hasNotification && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
               1
-            </span>
-          )}
+            </span>}
           <span className="absolute right-full mr-3 bg-gray-800 text-white px-3 py-1 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             Ajuda
           </span>
-        </button>
-      )}
+        </button>}
 
-      {isOpen && (
-        <div className={`bg-white rounded-lg shadow-2xl border transition-all duration-300 ${
-          isMinimized ? 'w-80 h-12' : 'w-96 h-[600px] max-h-[80vh]'
-        } flex flex-col`}>
+      {isOpen && <div className={`bg-white rounded-lg shadow-2xl border transition-all duration-300 ${isMinimized ? 'w-80 h-12' : 'w-96 h-[600px] max-h-[80vh]'} flex flex-col`}>
           {/* Header */}
           <div className="bg-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -383,90 +327,61 @@ const ChatAssistant: React.FC = () => {
               <span className="font-semibold">Assistente e-Loomini</span>
             </div>
             <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsMinimized(!isMinimized)}
-                className="p-1 hover:bg-blue-700 rounded transition-colors"
-                aria-label={isMinimized ? "Maximizar" : "Minimizar"}
-              >
+              <button onClick={() => setIsMinimized(!isMinimized)} className="p-1 hover:bg-blue-700 rounded transition-colors" aria-label={isMinimized ? "Maximizar" : "Minimizar"}>
                 <Minus size={16} />
               </button>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-blue-700 rounded transition-colors"
-                aria-label="Fechar chat"
-              >
+              <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-blue-700 rounded transition-colors" aria-label="Fechar chat">
                 <X size={16} />
               </button>
             </div>
           </div>
 
-          {!isMinimized && (
-            <>
+          {!isMinimized && <>
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
-                        message.sender === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
+                {messages.map(message => <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${message.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
                       <div className="text-sm">{formatMessage(message.text)}</div>
                       <div className="text-xs opacity-70 mt-1">
-                        {message.timestamp.toLocaleTimeString('pt-BR', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
+                        {message.timestamp.toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
 
-                {isTyping && (
-                  <div className="flex justify-start">
+                {isTyping && <div className="flex justify-start">
                     <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg shadow-sm">
                       <div className="flex items-center space-x-1">
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{
+                  animationDelay: '0.1s'
+                }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{
+                  animationDelay: '0.2s'
+                }}></div>
                         <span className="ml-2 text-sm">Assistente está digitando...</span>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Quick Actions */}
-              {showQuickActions && (
-                <div className="px-4 py-2 border-t bg-gray-50">
+              {showQuickActions && <div className="px-4 py-2 border-t bg-gray-50">
                   <div className="text-xs text-gray-500 mb-2">Ações rápidas:</div>
                   <div className="flex flex-wrap gap-2">
-                    {quickActionButtons.map((action) => (
-                      <button
-                        key={action}
-                        onClick={() => handleQuickAction(action)}
-                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors duration-200"
-                      >
+                    {quickActionButtons.map(action => <button key={action} onClick={() => handleQuickAction(action)} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors duration-200">
                         {action}
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Escalation Button */}
               <div className="px-4 py-2 border-t bg-gray-50">
-                <button
-                  onClick={handleEscalation}
-                  className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors duration-200"
-                >
+                <button onClick={handleEscalation} className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors duration-200">
                   <Phone size={16} />
                   <span>Falar com Humano</span>
                 </button>
@@ -475,32 +390,15 @@ const ChatAssistant: React.FC = () => {
               {/* Input Area */}
               <div className="p-4 border-t bg-white">
                 <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Digite sua pergunta..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim()}
-                    className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                    aria-label="Enviar mensagem"
-                  >
+                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSendMessage()} placeholder="Digite sua pergunta..." className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" />
+                  <button onClick={handleSendMessage} disabled={!inputValue.trim()} className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200" aria-label="Enviar mensagem">
                     <Send size={18} />
                   </button>
                 </div>
               </div>
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
+            </>}
+        </div>}
+    </div>;
   return createPortal(chatWidget, document.body);
 };
-
 export default ChatAssistant;
