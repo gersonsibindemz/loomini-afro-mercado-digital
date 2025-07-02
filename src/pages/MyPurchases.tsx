@@ -8,9 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useBuyerData } from '@/hooks/useBuyerData';
 import { formatCurrency } from '@/utils/currency';
-import LoadingSkeleton from '@/components/LoadingSkeleton';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+
+const LoadingSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+  </div>
+);
 
 const MyPurchases = () => {
   const navigate = useNavigate();
