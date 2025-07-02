@@ -1,275 +1,310 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, CheckCircle, Download } from 'lucide-react';
+import { ArrowLeft, Play, CheckCircle, FileText, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { useSimpleProgress } from '@/hooks/useSimpleProgress';
-import { useNotifications } from '@/components/NotificationSystem';
-import CoursePlayer from '@/components/CoursePlayer';
-
-// Mock course data
-const MOCK_COURSE = {
-  id: '1',
-  title: 'Curso Completo de Marketing Digital',
-  description: 'Aprenda todas as estratégias de marketing digital do básico ao avançado',
-  modules: [
-    {
-      id: '1',
-      title: 'Introdução ao Marketing Digital',
-      order_index: 1,
-      lessons: [
-        {
-          id: '1-1',
-          title: 'O que é Marketing Digital',
-          description: 'Conceitos fundamentais do marketing digital',
-          duration: '15:30',
-          video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-          order_index: 1,
-          materials: [
-            { id: '1', name: 'Slides - Introdução.pdf', file_type: 'pdf', file_url: '#' }
-          ]
-        },
-        {
-          id: '1-2',
-          title: 'Ferramentas Essenciais',
-          description: 'Principais ferramentas para começar',
-          duration: '20:45',
-          video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-          order_index: 2,
-          materials: []
-        }
-      ]
-    },
-    {
-      id: '2',
-      title: 'Estratégias de Conteúdo',
-      order_index: 2,
-      lessons: [
-        {
-          id: '2-1',
-          title: 'Criação de Conteúdo',
-          description: 'Como criar conteúdo que converte',
-          duration: '25:15',
-          video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-          order_index: 1,
-          materials: [
-            { id: '2', name: 'Template - Calendário Editorial.xlsx', file_type: 'xlsx', file_url: '#' }
-          ]
-        }
-      ]
-    }
-  ]
-};
 
 const CourseViewer = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { addNotification } = useNotifications();
+  const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
+  const [showCertificateForm, setShowCertificateForm] = useState(false);
+  const [fullName, setFullName] = useState('');
   
-  const [currentLessonId, setCurrentLessonId] = useState<string>('');
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-
   const {
     progress,
+    isLoading,
     updateProgress,
     requestCertificate,
-    isLoading: progressLoading
-  } = useSimpleProgress(id!);
+    certificateRequests,
+    isUpdatingProgress,
+    isRequestingCertificate
+  } = useSimpleProgress(id || '');
 
-  // Get all lessons for navigation
-  const allLessons = MOCK_COURSE.modules.flatMap(module => 
-    module.lessons.map(lesson => ({ ...lesson, moduleId: module.id, moduleTitle: module.title }))
-  );
-
-  const currentLesson = allLessons.find(lesson => lesson.id === currentLessonId);
-  const currentLessonIndex = allLessons.findIndex(lesson => lesson.id === currentLessonId);
-
-  useEffect(() => {
-    if (allLessons.length > 0 && !currentLessonId) {
-      setCurrentLessonId(allLessons[0].id);
-    }
-  }, [allLessons, currentLessonId]);
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-  }, [user, navigate]);
-
-  const handleTimeUpdate = (time: number) => {
-    setCurrentTime(time);
-    
-    if (duration > 0) {
-      const watchPercentage = Math.round((time / duration) * 100);
-      const lessonProgress = progress.find(p => p.lessonId === currentLessonId);
-      
-      if (!lessonProgress || lessonProgress.watchPercentage < watchPercentage) {
-        updateProgress(currentLessonId, watchPercentage);
+  // Mock course data
+  const course = {
+    id: id || 'curso-1',
+    title: 'Curso Completo de Marketing Digital',
+    description: 'Aprenda as estratégias mais eficazes do marketing digital',
+    instructor: 'Ana Silva',
+    duration: '10 horas',
+    totalLessons: 8,
+    modules: [
+      {
+        id: 'module-1',
+        title: 'Fundamentos do Marketing Digital',
+        lessons: [
+          {
+            id: 'lesson-1',
+            title: 'Introdução ao Marketing Digital',
+            duration: '15 min',
+            videoUrl: 'https://example.com/video1.mp4',
+            completed: false
+          },
+          {
+            id: 'lesson-2', 
+            title: 'Principais Canais Digitais',
+            duration: '20 min',
+            videoUrl: 'https://example.com/video2.mp4',
+            completed: false
+          }
+        ]
+      },
+      {
+        id: 'module-2',
+        title: 'Estratégias de Conteúdo',
+        lessons: [
+          {
+            id: 'lesson-3',
+            title: 'Criação de Conteúdo',
+            duration: '25 min',
+            videoUrl: 'https://example.com/video3.mp4',
+            completed: false
+          },
+          {
+            id: 'lesson-4',
+            title: 'Planejamento Editorial',
+            duration: '18 min',
+            videoUrl: 'https://example.com/video4.mp4',
+            completed: false
+          }
+        ]
       }
+    ]
+  };
+
+  const allLessons = course.modules.flatMap(module => module.lessons);
+  const currentLesson = allLessons[currentLessonIndex];
+  const completedLessons = progress.filter(p => p.completed).length;
+  const progressPercentage = (completedLessons / allLessons.length) * 100;
+
+  const handleVideoEnd = () => {
+    if (currentLesson) {
+      updateProgress(currentLesson.id, 100, true);
     }
   };
 
-  const markAsCompleted = () => {
-    if (currentTime / duration >= 0.9) {
-      updateProgress(currentLessonId, 100, true);
-      addNotification({
-        type: 'success',
-        title: 'Aula Concluída!',
-        message: 'Parabéns por completar esta aula.'
-      });
-    }
-  };
-
-  const goToNextLesson = () => {
+  const handleNextLesson = () => {
     if (currentLessonIndex < allLessons.length - 1) {
-      setCurrentLessonId(allLessons[currentLessonIndex + 1].id);
+      setCurrentLessonIndex(currentLessonIndex + 1);
     }
   };
 
-  const goToPreviousLesson = () => {
+  const handlePreviousLesson = () => {
     if (currentLessonIndex > 0) {
-      setCurrentLessonId(allLessons[currentLessonIndex - 1].id);
+      setCurrentLessonIndex(currentLessonIndex - 1);
+    }
+  };
+
+  const handleLessonSelect = (lessonIndex: number) => {
+    setCurrentLessonIndex(lessonIndex);
+  };
+
+  const handleRequestCertificate = async () => {
+    if (!fullName.trim()) return;
+    
+    try {
+      await requestCertificate(fullName);
+      setShowCertificateForm(false);
+      setFullName('');
+    } catch (error) {
+      console.error('Erro ao solicitar certificado:', error);
     }
   };
 
   const isLessonCompleted = (lessonId: string) => {
-    const lessonProgress = progress.find(p => p.lessonId === lessonId);
-    return lessonProgress?.completed || false;
+    return progress.some(p => p.lessonId === lessonId && p.completed);
   };
 
-  if (!user) return null;
+  const canRequestCertificate = progressPercentage >= 80;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Carregando curso...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-80 bg-white shadow-lg">
-        <div className="p-6 border-b">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">{MOCK_COURSE.title}</h1>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }} />
-          </div>
-          <p className="text-sm text-gray-600 mt-2">45% concluído</p>
-        </div>
-
-        <div className="p-4 space-y-4">
-          {MOCK_COURSE.modules.map((module) => (
-            <div key={module.id} className="space-y-2">
-              <h3 className="font-semibold text-gray-900">{module.title}</h3>
-              {module.lessons.map((lesson) => (
-                <button
-                  key={lesson.id}
-                  onClick={() => setCurrentLessonId(lesson.id)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors ${
-                    currentLessonId === lesson.id
-                      ? 'bg-blue-50 border-l-4 border-blue-500'
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm">{lesson.title}</h4>
-                      <p className="text-xs text-gray-600">{lesson.duration}</p>
-                    </div>
-                    {isLessonCompleted(lesson.id) && (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    )}
-                  </div>
-                </button>
-              ))}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/minhas-compras')}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Voltar</span>
+              </Button>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{course.title}</h1>
+                <p className="text-sm text-gray-600">por {course.instructor}</p>
+              </div>
             </div>
-          ))}
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-600">
+                {completedLessons} de {allLessons.length} aulas concluídas
+              </div>
+              <Progress value={progressPercentage} className="w-32" />
+              <span className="text-sm font-medium">{Math.round(progressPercentage)}%</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col">
-        {currentLesson && (
-          <>
-            <CoursePlayer
-              videoUrl={currentLesson.video_url}
-              onTimeUpdate={handleTimeUpdate}
-              onDurationChange={setDuration}
-              onPlayStateChange={() => {}}
-            />
-
-            {/* Lesson Info and Controls */}
-            <div className="bg-white p-6 border-b">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{currentLesson.title}</h2>
-                  <p className="text-gray-600 mt-1">{currentLesson.description}</p>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <Badge variant="outline">{currentLesson.moduleTitle}</Badge>
-                    <span className="text-sm text-gray-500">Duração: {currentLesson.duration}</span>
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Video Player */}
+          <div className="lg:col-span-3">
+            <Card>
+              <CardContent className="p-0">
+                <div className="aspect-video bg-black rounded-t-lg flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <Play className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-semibold mb-2">{currentLesson?.title}</h3>
+                    <p className="text-sm opacity-75">Duração: {currentLesson?.duration}</p>
+                    <Button
+                      onClick={handleVideoEnd}
+                      className="mt-4"
+                      disabled={isUpdatingProgress}
+                    >
+                      {isUpdatingProgress ? 'Marcando...' : 'Marcar como Concluída'}
+                    </Button>
                   </div>
                 </div>
-                
-                {duration > 0 && currentTime / duration >= 0.9 && !isLessonCompleted(currentLessonId) && (
-                  <Button onClick={markAsCompleted} className="bg-green-600 hover:bg-green-700">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Marcar como Concluída
-                  </Button>
-                )}
-              </div>
-
-              {/* Navigation */}
-              <div className="flex items-center justify-between">
-                <Button
-                  variant="outline"
-                  onClick={goToPreviousLesson}
-                  disabled={currentLessonIndex === 0}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Aula Anterior
-                </Button>
-
-                <div className="text-sm text-gray-600">
-                  Aula {currentLessonIndex + 1} de {allLessons.length}
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      onClick={handlePreviousLesson}
+                      disabled={currentLessonIndex === 0}
+                    >
+                      Aula Anterior
+                    </Button>
+                    <Button
+                      onClick={handleNextLesson}
+                      disabled={currentLessonIndex === allLessons.length - 1}
+                    >
+                      Próxima Aula
+                    </Button>
+                  </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <Button
-                  variant="outline"
-                  onClick={goToNextLesson}
-                  disabled={currentLessonIndex === allLessons.length - 1}
-                >
-                  Próxima Aula
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Materials */}
-            {currentLesson.materials && currentLesson.materials.length > 0 && (
-              <div className="bg-white p-6">
-                <h3 className="text-lg font-semibold mb-4">Materiais de Apoio</h3>
-                <div className="space-y-2">
-                  {currentLesson.materials.map((material) => (
-                    <div key={material.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Download className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{material.name}</h4>
-                          <p className="text-sm text-gray-600">{material.file_type.toUpperCase()}</p>
-                        </div>
+            {/* Certificate Section */}
+            {canRequestCertificate && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Award className="w-5 h-5 text-yellow-500" />
+                    <span>Certificado de Conclusão</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4">
+                    Parabéns! Você concluiu {Math.round(progressPercentage)}% do curso e pode solicitar seu certificado.
+                  </p>
+                  {!showCertificateForm ? (
+                    <Button onClick={() => setShowCertificateForm(true)}>
+                      Solicitar Certificado
+                    </Button>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Nome completo para o certificado:
+                        </label>
+                        <input
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          placeholder="Digite seu nome completo"
+                        />
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Baixar
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={handleRequestCertificate}
+                          disabled={!fullName.trim() || isRequestingCertificate}
+                        >
+                          {isRequestingCertificate ? 'Solicitando...' : 'Confirmar Solicitação'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowCertificateForm(false)}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Course Sidebar */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Conteúdo do Curso</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="space-y-2">
+                  {course.modules.map((module, moduleIndex) => (
+                    <div key={module.id} className="border-b last:border-b-0">
+                      <div className="p-4 bg-gray-50">
+                        <h4 className="font-medium text-sm text-gray-900">{module.title}</h4>
+                      </div>
+                      {module.lessons.map((lesson, lessonIndex) => {
+                        const globalLessonIndex = course.modules
+                          .slice(0, moduleIndex)
+                          .reduce((acc, mod) => acc + mod.lessons.length, 0) + lessonIndex;
+                        
+                        return (
+                          <button
+                            key={lesson.id}
+                            onClick={() => handleLessonSelect(globalLessonIndex)}
+                            className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${
+                              currentLessonIndex === globalLessonIndex ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              {isLessonCompleted(lesson.id) ? (
+                                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              ) : (
+                                <div className="w-4 h-4 border-2 border-gray-300 rounded-full flex-shrink-0" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {lesson.title}
+                                </p>
+                                <p className="text-xs text-gray-500">{lesson.duration}</p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </>
-        )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
