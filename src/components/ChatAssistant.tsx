@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { MessageCircle, X, Minus, Send, Phone } from 'lucide-react';
+import { MessageCircle, X, Minus, Send } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileChatOverlay from './MobileChatAssistant';
 import { useChatUser } from '../hooks/useChatUser';
@@ -157,8 +157,8 @@ const ChatAssistant: React.FC = () => {
     },
     'reportar_bugs': {
       keywords: ['bug', 'erro', 'problema', 'não funciona', 'travou'],
-      response: '🐛 **Como reportar problemas técnicos:**\n\n**Antes de reportar:**\n1. Atualize a página (F5)\n2. Limpe cache do navegador\n3. Tente outro navegador\n4. Verifique sua conexão\n\n**Para reportar:**\n1. Descreva o problema\n2. Quando aconteceu\n3. Que página estava\n4. Seu navegador/dispositivo\n\n📱 **Contato:** Use "Falar com Humano" abaixo',
-      quickActions: ['Falar com Humano', 'Suporte Técnico']
+      response: '🐛 **Como reportar problemas técnicos:**\n\n**Antes de reportar:**\n1. Atualize a página (F5)\n2. Limpe cache do navegador\n3. Tente outro navegador\n4. Verifique sua conexão\n\n**Para reportar:**\n1. Descreva o problema\n2. Quando aconteceu\n3. Que página estava\n4. Seu navegador/dispositivo\n\n📱 **Contato:** Nosso suporte técnico pode ajudar pelo WhatsApp: +258 84 123 4567',
+      quickActions: ['Suporte Técnico']
     },
     'editar_produtos': {
       keywords: ['editar', 'alterar', 'modificar', 'excluir', 'deletar'],
@@ -265,7 +265,20 @@ const ChatAssistant: React.FC = () => {
     if (userInput.toLowerCase().includes('tchau') || userInput.toLowerCase().includes('até')) {
       return '👋 Até logo! Sempre que precisar, estarei aqui para ajudar. Tenha um ótimo dia!';
     }
-    return `Entendo sua dúvida, mas preciso de um especialista para te ajudar melhor! 🤔\n\nPara questões específicas como esta, recomendo entrar em contato com nosso suporte:\n\n📱 **WhatsApp:** +258 84 123 4567\n\n💬 **Nosso especialista pode ajudar com:**\n• Problemas técnicos específicos\n• Questões de pagamento\n• Suporte personalizado\n• Dúvidas complexas\n\n🕐 **Horário:** Segunda a sexta, 8h às 18h`;
+    return `Entendo sua dúvida, mas preciso pesquisar melhor para te dar uma resposta precisa! 🤔\n\nPara questões específicas como esta, posso verificar nossa base de conhecimento ou você pode entrar em contato com nosso suporte especializado:\n\n📱 **WhatsApp:** +258 84 123 4567\n\n💬 **Nosso especialista pode ajudar com:**\n• Problemas técnicos específicos\n• Questões de pagamento\n• Suporte personalizado\n• Dúvidas complexas\n\n🕐 **Horário:** Segunda a sexta, 8h às 18h`;
+  };
+
+  // Calculate delay based on response length (realistic reading/thinking time)
+  const calculateResponseDelay = (response: string): number => {
+    const wordCount = response.split(' ').length;
+    const baseDelay = 2000; // 2 seconds minimum
+    const wordDelay = 50; // 50ms per word (reading time)
+    const thinkingTime = 1000; // Additional thinking time
+    
+    const totalDelay = baseDelay + (wordCount * wordDelay) + thinkingTime;
+    
+    // Cap maximum delay at 15 seconds, minimum at 3 seconds
+    return Math.min(Math.max(totalDelay, 3000), 15000);
   };
 
   const handleSendMessage = async () => {
@@ -279,13 +292,18 @@ const ChatAssistant: React.FC = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsTyping(true);
     setShowQuickActions(false);
 
-    // Simulate AI thinking time
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-    const assistantResponse = getAssistantResponse(inputValue);
+    // Get the response first to calculate appropriate delay
+    const assistantResponse = getAssistantResponse(currentInput);
+    const delay = calculateResponseDelay(assistantResponse);
+
+    // Add realistic delay based on response length
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
     const assistantMessage: Message = {
       id: (Date.now() + 1).toString(),
       text: assistantResponse,
@@ -299,16 +317,6 @@ const ChatAssistant: React.FC = () => {
   const handleQuickAction = (action: string) => {
     setInputValue(action);
     handleSendMessage();
-  };
-
-  const handleEscalation = () => {
-    const escalationMessage: Message = {
-      id: Date.now().toString(),
-      text: 'Perfeito! Nosso especialista está disponível para ajudá-lo:\n\n📱 **WhatsApp:** +258 84 123 4567\n\nClique no link para iniciar uma conversa: https://wa.me/258841234567\n\n💬 **Mensagem sugerida:** "Olá, preciso de ajuda com o e-Loomini"',
-      sender: 'assistant',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, escalationMessage]);
   };
 
   const formatMessage = (text: string) => {
@@ -358,7 +366,6 @@ const ChatAssistant: React.FC = () => {
         showQuickActions={showQuickActions} 
         quickActionButtons={quickActionButtons} 
         onQuickAction={handleQuickAction} 
-        onEscalation={handleEscalation} 
         formatMessage={formatMessage} 
       />, 
       document.body
@@ -475,17 +482,6 @@ const ChatAssistant: React.FC = () => {
                   </div>
                 </div>
               )}
-
-              {/* Escalation Button */}
-              <div className="px-4 py-2 border-t bg-gray-50">
-                <button
-                  onClick={handleEscalation}
-                  className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors duration-200"
-                >
-                  <Phone size={16} />
-                  <span>Falar com Humano</span>
-                </button>
-              </div>
 
               {/* Input Area */}
               <div className="p-4 border-t bg-white">

@@ -17,11 +17,10 @@ export const useChatUser = () => {
         setUserData(parsed);
       } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
-        setShowWelcomeForm(true);
+        // Não mostrar formulário automaticamente, só quando solicitado
       }
-    } else {
-      setShowWelcomeForm(true);
     }
+    // Remover o setShowWelcomeForm(true) automático
   }, []);
 
   const saveUserData = (data: ChatUserData) => {
