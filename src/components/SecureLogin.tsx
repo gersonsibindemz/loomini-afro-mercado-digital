@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
@@ -18,7 +17,7 @@ const SecureLogin = () => {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, profile } = useAuth();
   const { sanitizeInput, validateEmail } = useSecurity();
   
   const rateLimiter = useRateLimiter({
@@ -61,7 +60,7 @@ const SecureLogin = () => {
 
     try {
       await signIn(sanitizedEmail, sanitizedPassword);
-      navigate('/dashboard');
+      // The AuthContext will handle the redirect based on user role
     } catch (error: any) {
       console.error('Login error:', error);
       setError(error.message || 'Erro ao fazer login. Verifique suas credenciais.');

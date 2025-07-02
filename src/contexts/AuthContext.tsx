@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -134,6 +133,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: 'Login realizado!',
         message: 'Bem-vindo de volta!'
       });
+
+      // Wait for profile to load and then redirect
+      setTimeout(() => {
+        if (profile) {
+          const dashboardRoute = profile.role === 'criador' ? '/painel-criador' : '/painel-comprador';
+          window.location.href = dashboardRoute;
+        }
+      }, 1000);
     } catch (error: any) {
       addNotification({
         type: 'error',

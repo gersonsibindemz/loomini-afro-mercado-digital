@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
@@ -61,9 +60,10 @@ const Login = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Simular login bem-sucedido
+      const userRole = 'comprador'; // This would come from actual authentication
       localStorage.setItem('user', JSON.stringify({
         email: formData.email,
-        role: 'comprador',
+        role: userRole,
         name: 'Usuário'
       }));
 
@@ -73,8 +73,10 @@ const Login = () => {
         message: 'Bem-vindo de volta ao e-Loomini'
       });
 
+      // Redirect directly to role-specific dashboard
+      const dashboardRoute = userRole === 'criador' ? '/painel-criador' : '/painel-comprador';
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate(dashboardRoute);
       }, 1000);
 
     } catch (error) {
