@@ -1,9 +1,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNotifications } from '@/components/NotificationSystem';
+import { useErrorHandler } from './useErrorHandler';
 
 export interface UserProgress {
   id: string;
@@ -29,11 +28,11 @@ export interface CertificateRequest {
 
 export const useCourseProgress = (courseId: string) => {
   const { user } = useAuth();
-  const { addNotification } = useNotifications();
+  const { handleError, wrapAsync } = useErrorHandler();
   const queryClient = useQueryClient();
 
   // Fetch user progress for the course
-  const { data: progress = [], isLoading, error, isError } = useQuery({
+  const { data: progress = [], isLoading, error } = useQuery({
     queryKey: ['course-progress', courseId, user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -49,21 +48,11 @@ export const useCourseProgress = (courseId: string) => {
     },
     enabled: !!user && !!courseId,
     retry: 2,
-    staleTime: 30 * 1000 // 30 seconds
+    staleTime: 30 * 1000
   });
 
-  // Mock certificate requests for now (until DB is refreshed)
+  // Mock certificate requests (will be replaced when DB is updated)
   const certificateRequests: CertificateRequest[] = [];
-
-  useEffect(() => {
-    if (isError && error) {
-      addNotification({
-        type: 'error',
-        title: 'Erro ao carregar progresso',
-        message: 'Não foi possível carregar o progresso do curso.'
-      });
-    }
-  }, [isError, error, addNotification]);
 
   // Update progress mutation
   const updateProgressMutation = useMutation({
@@ -97,82 +86,38 @@ export const useCourseProgress = (courseId: string) => {
       queryClient.invalidateQueries({ queryKey: ['course-progress', courseId, user?.id] });
     },
     onError: (error: any) => {
-      console.error('Error updating progress:', error);
-      addNotification({
-        type: 'error',
-        title: 'Erro ao salvar progresso',
-        message: 'Não foi possível salvar o progresso da aula.'
+      handleError(error, {
+        context: { courseId, operation: 'updateProgress' }
       });
     }
   });
 
-  // Mock certificate request for now
+  // Certificate request mutation (mocked for now)
   const requestCertificateMutation = useMutation({
     mutationFn: async (fullName: string) => {
       if (!user) throw new Error('Usuário não autenticado');
       
-      // Mock implementation - in real app this would save to database
+      // Mock implementation
       console.log('Certificate requested for:', fullName);
       return { success: true };
     },
     onSuccess: () => {
-      addNotification({
-        type: 'success',
-        title: 'Certificado Solicitado!',
-        message: 'Certificado solicitado! Será enviado em até 5 dias úteis.'
-      });
+      // Handle success notification in component
     },
     onError: (error: any) => {
-      console.error('Error requesting certificate:', error);
-      addNotification({
-        type: 'error',
-        title: 'Erro ao solicitar certificado',
-        message: 'Não foi possível solicitar o certificado.'
+      handleError(error, {
+        context: { courseId, operation: 'requestCertificate' }
       });
     }
   });
-
-  // Mock course structure for calculations
-  const mockModules = [
-    {
-      id: '1',
-      lessons: ['1-1', '1-2']
-    },
-    {
-      id: '2', 
-      lessons: ['2-1']
-    }
-  ];
-
-  // Calculate course completion percentage
-  const totalLessons = mockModules.reduce((acc, module) => acc + module.lessons.length, 0);
-  const completedLessons = progress.filter(p => p.completed).length;
-  const courseCompletionPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-
-  // Check if a module is completed
-  const isModuleCompleted = (moduleId: string) => {
-    const module = mockModules.find(m => m.id === moduleId);
-    if (!module) return false;
-    
-    return module.lessons.every(lessonId => 
-      progress.some(p => p.lesson_id === lessonId && p.completed)
-    );
-  };
-
-  // Check if user can request certificate (all modules completed)
-  const canRequestCertificate = mockModules.every(module => isModuleCompleted(module.id)) &&
-                                certificateRequests.length === 0;
 
   return {
     progress,
     isLoading,
     error,
-    courseCompletionPercentage,
     updateProgress: (lessonId: string, watchPercentage: number, completed?: boolean) =>
       updateProgressMutation.mutate({ lessonId, watchPercentage, completed }),
     requestCertificate: (fullName: string) => requestCertificateMutation.mutate(fullName),
-    isModuleCompleted,
-    canRequestCertificate,
     certificateRequests,
     isUpdatingProgress: updateProgressMutation.isPending,
     isRequestingCertificate: requestCertificateMutation.isPending

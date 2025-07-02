@@ -1,19 +1,69 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, Pause, Volume2, Maximize, ChevronLeft, ChevronRight, CheckCircle, Download, Award } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseProgress } from '@/hooks/useCourseProgress';
+import { useCourseCompletion } from '@/hooks/useCourseCompletion';
 import { useNotifications } from '@/components/NotificationSystem';
-import { Separator } from '@/components/ui/separator';
+import CoursePlayer from '@/components/CoursePlayer';
+import CourseSidebar from '@/components/CourseSidebar';
+
+// Mock course data
+const MOCK_COURSE = {
+  id: '1',
+  title: 'Curso Completo de Marketing Digital',
+  description: 'Aprenda todas as estratégias de marketing digital do básico ao avançado',
+  modules: [
+    {
+      id: '1',
+      title: 'Introdução ao Marketing Digital',
+      order_index: 1,
+      lessons: [
+        {
+          id: '1-1',
+          title: 'O que é Marketing Digital',
+          description: 'Conceitos fundamentais do marketing digital',
+          duration: '15:30',
+          video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+          order_index: 1,
+          materials: [
+            { id: '1', name: 'Slides - Introdução.pdf', file_type: 'pdf', file_url: '#' }
+          ]
+        },
+        {
+          id: '1-2',
+          title: 'Ferramentas Essenciais',
+          description: 'Principais ferramentas para começar',
+          duration: '20:45',
+          video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+          order_index: 2,
+          materials: []
+        }
+      ]
+    },
+    {
+      id: '2',
+      title: 'Estratégias de Conteúdo',
+      order_index: 2,
+      lessons: [
+        {
+          id: '2-1',
+          title: 'Criação de Conteúdo',
+          description: 'Como criar conteúdo que converte',
+          duration: '25:15',
+          video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+          order_index: 1,
+          materials: [
+            { id: '2', name: 'Template - Calendário Editorial.xlsx', file_type: 'xlsx', file_url: '#' }
+          ]
+        }
+      ]
+    }
+  ]
+};
 
 const CourseViewer = () => {
   const { id } = useParams();
@@ -25,77 +75,23 @@ const CourseViewer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [certificateDialogOpen, setCertificateDialogOpen] = useState(false);
-  const [fullName, setFullName] = useState('');
-
-  // Mock course data - in real app, this would come from API
-  const course = {
-    id: id,
-    title: 'Curso Completo de Marketing Digital',
-    description: 'Aprenda todas as estratégias de marketing digital do básico ao avançado',
-    modules: [
-      {
-        id: '1',
-        title: 'Introdução ao Marketing Digital',
-        order_index: 1,
-        lessons: [
-          {
-            id: '1-1',
-            title: 'O que é Marketing Digital',
-            description: 'Conceitos fundamentais do marketing digital',
-            duration: '15:30',
-            video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-            order_index: 1,
-            materials: [
-              { id: '1', name: 'Slides - Introdução.pdf', file_type: 'pdf', file_url: '#' }
-            ]
-          },
-          {
-            id: '1-2',
-            title: 'Ferramentas Essenciais',
-            description: 'Principais ferramentas para começar',
-            duration: '20:45',
-            video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-            order_index: 2,
-            materials: []
-          }
-        ]
-      },
-      {
-        id: '2',
-        title: 'Estratégias de Conteúdo',
-        order_index: 2,
-        lessons: [
-          {
-            id: '2-1',
-            title: 'Criação de Conteúdo',
-            description: 'Como criar conteúdo que converte',
-            duration: '25:15',
-            video_url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-            order_index: 1,
-            materials: [
-              { id: '2', name: 'Template - Calendário Editorial.xlsx', file_type: 'xlsx', file_url: '#' }
-            ]
-          }
-        ]
-      }
-    ]
-  };
 
   const {
     progress,
     updateProgress,
     requestCertificate,
     isLoading: progressLoading,
+    certificateRequests
+  } = useCourseProgress(id!);
+
+  const {
     courseCompletionPercentage,
     isModuleCompleted,
     canRequestCertificate
-  } = useCourseProgress(id!);
+  } = useCourseCompletion(progress, certificateRequests.length);
 
   // Get all lessons for navigation
-  const allLessons = course.modules.flatMap(module => 
+  const allLessons = MOCK_COURSE.modules.flatMap(module => 
     module.lessons.map(lesson => ({ ...lesson, moduleId: module.id, moduleTitle: module.title }))
   );
 
@@ -151,19 +147,8 @@ const CourseViewer = () => {
     }
   };
 
-  const handleCertificateRequest = async () => {
-    if (!fullName.trim()) {
-      addNotification({
-        type: 'error',
-        title: 'Nome Obrigatório',
-        message: 'Por favor, insira seu nome completo para o certificado.'
-      });
-      return;
-    }
-
+  const handleCertificateRequest = async (fullName: string) => {
     await requestCertificate(fullName);
-    setCertificateDialogOpen(false);
-    setFullName('');
     addNotification({
       type: 'success',
       title: 'Certificado Solicitado!',
@@ -171,12 +156,8 @@ const CourseViewer = () => {
     });
   };
 
-  const getLessonProgress = (lessonId: string) => {
-    return progress.find(p => p.lesson_id === lessonId);
-  };
-
   const isLessonCompleted = (lessonId: string) => {
-    const lessonProgress = getLessonProgress(lessonId);
+    const lessonProgress = progress.find(p => p.lesson_id === lessonId);
     return lessonProgress?.completed || false;
   };
 
@@ -184,137 +165,27 @@ const CourseViewer = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Course Sidebar */}
-      <div className="w-96 bg-white shadow-lg overflow-y-auto">
-        <div className="p-6 border-b">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/minhas-compras')}
-            className="mb-4 p-0 h-auto text-sm"
-          >
-            ← Voltar para Minhas Compras
-          </Button>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h1>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Progresso do Curso</span>
-              <span>{courseCompletionPercentage}%</span>
-            </div>
-            <Progress value={courseCompletionPercentage} className="h-2" />
-          </div>
-          
-          {canRequestCertificate && (
-            <Dialog open={certificateDialogOpen} onOpenChange={setCertificateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full mt-4 bg-green-600 hover:bg-green-700">
-                  <Award className="w-4 h-4 mr-2" />
-                  Solicitar Certificado
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Solicitar Certificado de Conclusão</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="fullName">Nome Completo (como aparecerá no certificado)</Label>
-                    <Input
-                      id="fullName"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Digite seu nome completo"
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setCertificateDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={handleCertificateRequest}>
-                      Solicitar Certificado
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
-        </div>
+      <CourseSidebar
+        courseTitle={MOCK_COURSE.title}
+        modules={MOCK_COURSE.modules}
+        progress={progress}
+        courseCompletionPercentage={courseCompletionPercentage}
+        currentLessonId={currentLessonId}
+        canRequestCertificate={canRequestCertificate}
+        isModuleCompleted={isModuleCompleted}
+        onLessonSelect={setCurrentLessonId}
+        onCertificateRequest={handleCertificateRequest}
+      />
 
-        {/* Modules and Lessons */}
-        <div className="p-6">
-          <Accordion type="multiple" defaultValue={course.modules.map(m => m.id)}>
-            {course.modules.map((module) => (
-              <AccordionItem key={module.id} value={module.id}>
-                <AccordionTrigger className="text-left">
-                  <div className="flex items-center justify-between w-full mr-4">
-                    <span className="font-medium">{module.title}</span>
-                    {isModuleCompleted(module.id) && (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                    )}
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2 mt-2">
-                    {module.lessons.map((lesson) => {
-                      const lessonProgress = getLessonProgress(lesson.id);
-                      const completed = isLessonCompleted(lesson.id);
-                      const isActive = currentLessonId === lesson.id;
-                      
-                      return (
-                        <div
-                          key={lesson.id}
-                          className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                            isActive ? 'bg-blue-100 border border-blue-300' : 'bg-gray-50 hover:bg-gray-100'
-                          }`}
-                          onClick={() => setCurrentLessonId(lesson.id)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              {completed ? (
-                                <CheckCircle className="w-5 h-5 text-green-600" />
-                              ) : (
-                                <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
-                              )}
-                              <div>
-                                <h4 className="font-medium text-sm">{lesson.title}</h4>
-                                <p className="text-xs text-gray-600">{lesson.duration}</p>
-                              </div>
-                            </div>
-                          </div>
-                          {lessonProgress && !completed && (
-                            <div className="mt-2">
-                              <Progress value={lessonProgress.watch_percentage} className="h-1" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {currentLesson && (
           <>
-            {/* Video Player */}
-            <div className="bg-black relative">
-              <div className="aspect-video relative">
-                <video
-                  className="w-full h-full"
-                  src={currentLesson.video_url}
-                  poster="/placeholder.svg"
-                  onTimeUpdate={(e) => handleTimeUpdate(e.currentTarget.currentTime)}
-                  onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  controls
-                />
-              </div>
-            </div>
+            <CoursePlayer
+              videoUrl={currentLesson.video_url}
+              onTimeUpdate={handleTimeUpdate}
+              onDurationChange={setDuration}
+              onPlayStateChange={setIsPlaying}
+            />
 
             {/* Lesson Info and Controls */}
             <div className="bg-white p-6 border-b">
