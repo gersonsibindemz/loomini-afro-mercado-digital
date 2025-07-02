@@ -9,6 +9,7 @@ interface Product {
   title: string;
   creator: string;
   fullDescription: string;
+  type: 'course' | 'ebook';
 }
 
 interface ProductHeaderProps {
