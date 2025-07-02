@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, MessageCircle, Phone } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { X, Send, MessageCircle } from 'lucide-react';
 
 interface MobileChatOverlayProps {
   isOpen: boolean;
@@ -14,7 +13,6 @@ interface MobileChatOverlayProps {
   showQuickActions: boolean;
   quickActionButtons: string[];
   onQuickAction: (action: string) => void;
-  onEscalation: () => void;
   formatMessage: (text: string) => React.ReactNode;
 }
 
@@ -29,7 +27,6 @@ const MobileChatOverlay: React.FC<MobileChatOverlayProps> = ({
   showQuickActions,
   quickActionButtons,
   onQuickAction,
-  onEscalation,
   formatMessage
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -115,17 +112,6 @@ const MobileChatOverlay: React.FC<MobileChatOverlayProps> = ({
           </div>
         </div>
       )}
-
-      {/* Escalation Button */}
-      <div className="px-4 py-2 border-t bg-gray-50">
-        <button
-          onClick={onEscalation}
-          className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <Phone size={16} />
-          <span>Falar com Humano</span>
-        </button>
-      </div>
 
       {/* Input Area */}
       <div className="p-4 border-t bg-white">
