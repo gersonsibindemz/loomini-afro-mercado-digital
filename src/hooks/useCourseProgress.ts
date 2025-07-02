@@ -28,13 +28,13 @@ export interface CertificateRequest {
 
 export const useCourseProgress = (courseId: string) => {
   const { user } = useAuth();
-  const { handleError, wrapAsync } = useErrorHandler();
+  const { handleError } = useErrorHandler();
   const queryClient = useQueryClient();
 
   // Fetch user progress for the course
-  const { data: progress = [], isLoading, error } = useQuery({
+  const progressQuery = useQuery({
     queryKey: ['course-progress', courseId, user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserProgress[]> => {
       if (!user) return [];
       
       const { data, error } = await supabase
@@ -50,6 +50,10 @@ export const useCourseProgress = (courseId: string) => {
     retry: 2,
     staleTime: 30 * 1000
   });
+
+  const progress = progressQuery.data || [];
+  const isLoading = progressQuery.isLoading;
+  const error = progressQuery.error;
 
   // Mock certificate requests (will be replaced when DB is updated)
   const certificateRequests: CertificateRequest[] = [];
