@@ -28,6 +28,13 @@ const ChatAssistant = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
+  const getUserName = (user: any) => {
+    return user?.user_metadata?.first_name || 
+           user?.user_metadata?.full_name || 
+           user?.email?.split('@')[0] || 
+           'Usuário';
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -107,7 +114,7 @@ const ChatAssistant = () => {
               </CardTitle>
               {user && (
                 <p className="text-sm opacity-90">
-                  Olá, {user.email || 'Usuário'}!
+                  Olá, {getUserName(user)}!
                 </p>
               )}
             </CardHeader>

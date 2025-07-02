@@ -4,12 +4,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, CheckCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCourseProgress } from '@/hooks/useCourseProgress';
-import { useCourseCompletion } from '@/hooks/useCourseCompletion';
+import { useSimpleProgress } from '@/hooks/useSimpleProgress';
 import { useNotifications } from '@/components/NotificationSystem';
 import CoursePlayer from '@/components/CoursePlayer';
-import CourseSidebar from '@/components/CourseSidebar';
 
 // Mock course data
 const MOCK_COURSE = {
@@ -72,7 +71,6 @@ const CourseViewer = () => {
   const { addNotification } = useNotifications();
   
   const [currentLessonId, setCurrentLessonId] = useState<string>('');
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
@@ -80,15 +78,8 @@ const CourseViewer = () => {
     progress,
     updateProgress,
     requestCertificate,
-    isLoading: progressLoading,
-    certificateRequests
-  } = useCourseProgress(id!);
-
-  const {
-    courseCompletionPercentage,
-    isModuleCompleted,
-    canRequestCertificate
-  } = useCourseCompletion(progress, certificateRequests.length);
+    isLoading: progressLoading
+  } = useSimpleProgress(id!);
 
   // Get all lessons for navigation
   const allLessons = MOCK_COURSE.modules.flatMap(module => 
@@ -116,9 +107,9 @@ const CourseViewer = () => {
     
     if (duration > 0) {
       const watchPercentage = Math.round((time / duration) * 100);
-      const lessonProgress = progress.find(p => p.lesson_id === currentLessonId);
+      const lessonProgress = progress.find(p => p.lessonId === currentLessonId);
       
-      if (!lessonProgress || lessonProgress.watch_percentage < watchPercentage) {
+      if (!lessonProgress || lessonProgress.watchPercentage < watchPercentage) {
         updateProgress(currentLessonId, watchPercentage);
       }
     }
@@ -147,17 +138,8 @@ const CourseViewer = () => {
     }
   };
 
-  const handleCertificateRequest = async (fullName: string) => {
-    await requestCertificate(fullName);
-    addNotification({
-      type: 'success',
-      title: 'Certificado Solicitado!',
-      message: 'Certificado solicitado! Será enviado em até 5 dias úteis.'
-    });
-  };
-
   const isLessonCompleted = (lessonId: string) => {
-    const lessonProgress = progress.find(p => p.lesson_id === lessonId);
+    const lessonProgress = progress.find(p => p.lessonId === lessonId);
     return lessonProgress?.completed || false;
   };
 
@@ -165,17 +147,45 @@ const CourseViewer = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <CourseSidebar
-        courseTitle={MOCK_COURSE.title}
-        modules={MOCK_COURSE.modules}
-        progress={progress}
-        courseCompletionPercentage={courseCompletionPercentage}
-        currentLessonId={currentLessonId}
-        canRequestCertificate={canRequestCertificate}
-        isModuleCompleted={isModuleCompleted}
-        onLessonSelect={setCurrentLessonId}
-        onCertificateRequest={handleCertificateRequest}
-      />
+      {/* Sidebar */}
+      <div className="w-80 bg-white shadow-lg">
+        <div className="p-6 border-b">
+          <h1 className="text-xl font-bold text-gray-900 mb-2">{MOCK_COURSE.title}</h1>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }} />
+          </div>
+          <p className="text-sm text-gray-600 mt-2">45% concluído</p>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {MOCK_COURSE.modules.map((module) => (
+            <div key={module.id} className="space-y-2">
+              <h3 className="font-semibold text-gray-900">{module.title}</h3>
+              {module.lessons.map((lesson) => (
+                <button
+                  key={lesson.id}
+                  onClick={() => setCurrentLessonId(lesson.id)}
+                  className={`w-full text-left p-3 rounded-lg transition-colors ${
+                    currentLessonId === lesson.id
+                      ? 'bg-blue-50 border-l-4 border-blue-500'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm">{lesson.title}</h4>
+                      <p className="text-xs text-gray-600">{lesson.duration}</p>
+                    </div>
+                    {isLessonCompleted(lesson.id) && (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="flex-1 flex flex-col">
         {currentLesson && (
@@ -184,7 +194,7 @@ const CourseViewer = () => {
               videoUrl={currentLesson.video_url}
               onTimeUpdate={handleTimeUpdate}
               onDurationChange={setDuration}
-              onPlayStateChange={setIsPlaying}
+              onPlayStateChange={() => {}}
             />
 
             {/* Lesson Info and Controls */}
