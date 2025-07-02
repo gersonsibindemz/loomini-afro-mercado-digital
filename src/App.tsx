@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +8,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SecurityProvider } from "./components/SecurityProvider";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { CourseProvider } from "./contexts/CourseContext";
+import { ProgressProvider } from "./contexts/ProgressContext";
 
 // Layout Components
 import Header from "./components/Header";
@@ -116,11 +117,15 @@ const App = () => {
         <TooltipProvider>
           <ErrorBoundary onError={(error) => reportError(error, { location: 'AuthProvider' })}>
             <AuthProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <AppContent />
-              </BrowserRouter>
+              <CourseProvider>
+                <ProgressProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <AppContent />
+                  </BrowserRouter>
+                </ProgressProvider>
+              </CourseProvider>
             </AuthProvider>
           </ErrorBoundary>
         </TooltipProvider>
@@ -128,8 +133,6 @@ const App = () => {
     </ErrorBoundary>
   );
 };
-
-export default App;
 
 // Global error handler for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
@@ -153,3 +156,5 @@ window.addEventListener('error', (event) => {
     }
   );
 });
+
+export default App;
