@@ -33,6 +33,8 @@ import ProductCreation from "./pages/ProductCreation";
 import ProductTypeSelection from "./pages/ProductTypeSelection";
 import EbookCreation from "./pages/EbookCreation";
 import CourseCreation from "./pages/CourseCreation";
+import CourseRoom from "./pages/CourseRoom";
+import EbookViewer from "./pages/EbookViewer";
 import NotFound from "./pages/NotFound";
 
 // Error handling
@@ -74,6 +76,8 @@ const AppContent = () => {
               <Route path="/produto/:id" element={<ProductDetails />} />
               <Route path="/carrinho" element={<Cart />} />
               <Route path="/minhas-compras" element={<MyPurchases />} />
+              <Route path="/curso/:id" element={<CourseRoom />} />
+              <Route path="/ebook/:id" element={<EbookViewer />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/recuperar-senha" element={<PasswordRecovery />} />

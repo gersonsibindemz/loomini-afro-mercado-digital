@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Download, 
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 const MyPurchases = () => {
+  const navigate = useNavigate();
   const [purchases, setPurchases] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPurchases, setFilteredPurchases] = useState([]);
@@ -59,6 +60,16 @@ const MyPurchases = () => {
 
   const formatPrice = (price, currency) => {
     return `${price.toLocaleString()} ${currency}`;
+  };
+
+  const handleAccessProduct = (purchase) => {
+    if (purchase.type === 'course') {
+      // Navegar para a sala do curso
+      navigate(`/curso/${purchase.id}`);
+    } else {
+      // Para e-books, pode navegar para uma página de leitura ou download
+      navigate(`/ebook/${purchase.id}`);
+    }
   };
 
   if (purchases.length === 0) {
@@ -196,7 +207,10 @@ const MyPurchases = () => {
 
                 {/* Action Buttons */}
                 <div className="space-y-2">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={() => handleAccessProduct(purchase)}
+                  >
                     <Eye className="w-4 h-4 mr-2" />
                     Acessar Produto
                   </Button>
