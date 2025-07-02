@@ -2,25 +2,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  Star, 
-  Users, 
-  Clock, 
-  Book, 
-  FileText, 
-  Globe, 
-  BarChart3, 
-  Heart,
-  Download,
   Play,
+  Book,
+  FileText,
   ChevronDown,
-  ChevronUp,
-  ArrowLeft
+  ChevronUp
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
+import ProductHeader from '@/components/product/ProductHeader';
+import ProductStats from '@/components/product/ProductStats';
+import ProductMetadata from '@/components/product/ProductMetadata';
+import ProductPurchase from '@/components/product/ProductPurchase';
+import { calculateTotalDuration } from '@/utils/productUtils';
 
 // Mock product data
 const mockProducts = {
@@ -29,7 +24,7 @@ const mockProducts = {
     type: 'ebook',
     title: 'Guia Completo de Marketing Digital',
     category: 'Marketing',
-    description: 'Um guia abrangente sobre estratégias de marketing digital para pequenas e médias empresas. Aprenda sobre SEO, redes sociais, email marketing e muito mais.',
+    description: 'Um guia abrangente sobre estratégias de marketing digital para pequenas e médias empresas.',
     fullDescription: 'Este e-book é uma compilação completa das melhores práticas de marketing digital, desenvolvido especificamente para o mercado africano. Com exemplos práticos e estratégias testadas, você aprenderá como construir uma presença digital sólida para seu negócio.\n\nO conteúdo inclui: estratégias de SEO, marketing de conteúdo, gestão de redes sociais, campanhas de email marketing, análise de métricas e ROI, e muito mais.',
     creator: 'Ana Silva',
     price: 2500,
@@ -103,7 +98,6 @@ const ProductDetails = () => {
   const [isFavorited, setIsFavorited] = useState(false);
 
   useEffect(() => {
-    // Simulate API call
     const foundProduct = mockProducts[id];
     if (foundProduct) {
       setProduct(foundProduct);
@@ -115,10 +109,8 @@ const ProductDetails = () => {
   const handlePurchase = async () => {
     setIsLoading(true);
     
-    // Simulate purchase processing
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Save to localStorage (simulate purchase)
     const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
     const newPurchase = {
       ...product,
@@ -135,7 +127,6 @@ const ProductDetails = () => {
       description: "Produto adicionado à sua biblioteca.",
     });
     
-    // Redirect to purchases page
     setTimeout(() => {
       navigate('/minhas-compras');
     }, 1500);
@@ -148,148 +139,43 @@ const ProductDetails = () => {
     }));
   };
 
-  const formatPrice = (price, currency) => {
-    return `${price.toLocaleString()} ${currency}`;
-  };
-
-  const calculateTotalDuration = (modules) => {
-    let totalMinutes = 0;
-    modules?.forEach(module => {
-      module.lessons?.forEach(lesson => {
-        const duration = lesson.duration.match(/\d+/);
-        if (duration) totalMinutes += parseInt(duration[0]);
-      });
-    });
-    return `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min`;
-  };
-
   if (!product) {
     return <div className="flex justify-center items-center min-h-screen">Carregando...</div>;
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Back Button */}
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate(-1)}
-        className="mb-6 text-gray-600 hover:text-gray-800"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Voltar
-      </Button>
-
-      {/* Product Header */}
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        {/* Left Column - Image and Stats */}
+        <ProductStats
+          students={product.students}
+          rating={product.rating}
+          reviews={product.reviews}
+          cover={product.cover}
+          title={product.title}
+        />
+
         <div className="space-y-6">
-          {/* Product Cover */}
-          <div className="aspect-square lg:aspect-video bg-gray-100 rounded-lg overflow-hidden">
-            <img 
-              src={product.cover} 
-              alt={product.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <ProductHeader
+            product={product}
+            onBack={() => navigate(-1)}
+          />
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="p-4 flex items-center space-x-3">
-                <Users className="w-8 h-8 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Estudantes</p>
-                  <p className="font-bold text-lg">{product.students.toLocaleString()}</p>
-                </div>
-              </CardContent>
-            </Card>
+          <ProductMetadata
+            language={product.language}
+            level={product.level}
+            type={product.type}
+            duration={product.type === 'course' ? calculateTotalDuration(product.modules) : undefined}
+            pages={product.pages}
+          />
 
-            <Card>
-              <CardContent className="p-4 flex items-center space-x-3">
-                <Star className="w-8 h-8 text-yellow-500 fill-current" />
-                <div>
-                  <p className="text-sm text-gray-600">Avaliação</p>
-                  <p className="font-bold text-lg">
-                    {product.rating} ({product.reviews} avaliações)
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Right Column - Product Details */}
-        <div className="space-y-6">
-          {/* Category Badge */}
-          <Badge variant="secondary" className="text-sm">
-            {product.category}
-          </Badge>
-
-          {/* Title and Creator */}
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {product.title}
-            </h1>
-            <p className="text-gray-600 mb-4">por {product.creator}</p>
-          </div>
-
-          {/* Description */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">
-              Sobre este {product.type === 'course' ? 'curso' : 'e-book'}
-            </h3>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-              {product.fullDescription}
-            </p>
-          </div>
-
-          {/* Metadata */}
-          <div className="grid grid-cols-2 gap-4 py-4 border-t border-b">
-            <div className="flex items-center space-x-2">
-              <Globe className="w-4 h-4 text-gray-500" />
-              <span className="text-sm">Idioma: {product.language}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <BarChart3 className="w-4 h-4 text-gray-500" />
-              <span className="text-sm">Nível: {product.level}</span>
-            </div>
-            {product.type === 'course' ? (
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-gray-500" />
-                <span className="text-sm">Duração: {calculateTotalDuration(product.modules)}</span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Book className="w-4 h-4 text-gray-500" />
-                <span className="text-sm">Páginas: {product.pages}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Pricing and Purchase */}
-          <div className="space-y-4">
-            <div className="text-3xl font-bold text-green-600">
-              {formatPrice(product.price, product.currency)}
-            </div>
-            
-            <div className="flex space-x-3">
-              <Button 
-                onClick={handlePurchase}
-                disabled={isLoading}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 text-lg"
-              >
-                {isLoading ? 'Processando compra...' : 'Comprar Agora'}
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={() => setIsFavorited(!isFavorited)}
-                className={`px-4 ${isFavorited ? 'text-red-500 border-red-500' : ''}`}
-              >
-                <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
-              </Button>
-            </div>
-          </div>
+          <ProductPurchase
+            price={product.price}
+            currency={product.currency}
+            isLoading={isLoading}
+            isFavorited={isFavorited}
+            onPurchase={handlePurchase}
+            onToggleFavorite={() => setIsFavorited(!isFavorited)}
+          />
         </div>
       </div>
 
