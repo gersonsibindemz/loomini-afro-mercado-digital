@@ -60,7 +60,7 @@ const Login = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Simular login bem-sucedido
-      const userRole = 'comprador'; // This would come from actual authentication
+      const userRole: 'comprador' | 'criador' = Math.random() > 0.5 ? 'comprador' : 'criador'; // This would come from actual authentication
       localStorage.setItem('user', JSON.stringify({
         email: formData.email,
         role: userRole,
