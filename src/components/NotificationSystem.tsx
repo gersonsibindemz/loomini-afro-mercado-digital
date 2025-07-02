@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 
 interface Notification {
@@ -9,23 +9,6 @@ interface Notification {
   message?: string;
   duration?: number;
 }
-
-interface NotificationContextType {
-  notifications: Notification[];
-  addNotification: (notification: Omit<Notification, 'id'>) => void;
-  removeNotification: (id: string) => void;
-  clearAll: () => void;
-}
-
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
-
-export const useNotifications = () => {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error('useNotifications must be used within NotificationProvider');
-  }
-  return context;
-};
 
 interface NotificationSystemProps {
   notifications: Notification[];
@@ -115,7 +98,8 @@ const NotificationItem: React.FC<{
   );
 };
 
-export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// Hook para usar o sistema de notificações
+export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const addNotification = (notification: Omit<Notification, 'id'>) => {
@@ -131,19 +115,12 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotifications([]);
   };
 
-  const value = {
+  return {
     notifications,
     addNotification,
     removeNotification,
     clearAll
   };
-
-  return (
-    <NotificationContext.Provider value={value}>
-      {children}
-      <NotificationSystem notifications={notifications} onRemove={removeNotification} />
-    </NotificationContext.Provider>
-  );
 };
 
 export default NotificationSystem;
