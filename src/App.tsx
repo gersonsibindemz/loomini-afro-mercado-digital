@@ -24,6 +24,7 @@ import ChatAssistant from '@/components/ChatAssistant';
 import { NotificationProvider } from '@/components/NotificationSystem';
 import CourseViewer from '@/pages/CourseViewer';
 import { Toaster } from '@/components/ui/sonner';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,38 +35,40 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
         <NotificationProvider>
-          <BrowserRouter>
-            <div className="min-h-screen bg-white">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/password-recovery" element={<PasswordRecovery />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/painel-comprador" element={<BuyerDashboard />} />
-                <Route path="/painel-criador" element={<CreatorDashboard />} />
-                <Route path="/produtos" element={<Products />} />
-                <Route path="/produto/:id" element={<ProductDetails />} />
-                <Route path="/criar-produto" element={<ProductCreation />} />
-                <Route path="/selecionar-tipo-produto" element={<ProductTypeSelection />} />
-                <Route path="/criar-ebook" element={<EbookCreation />} />
-                <Route path="/criar-curso" element={<CourseCreation />} />
-                <Route path="/carrinho" element={<Cart />} />
-                <Route path="/minhas-compras" element={<MyPurchases />} />
-                <Route path="/curso/:id" element={<CourseViewer />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <ChatAssistant />
-            </div>
-            <Toaster />
-          </BrowserRouter>
+          <AuthProvider>
+            <BrowserRouter>
+              <div className="min-h-screen bg-white">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/password-recovery" element={<PasswordRecovery />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/painel-comprador" element={<BuyerDashboard />} />
+                  <Route path="/painel-criador" element={<CreatorDashboard />} />
+                  <Route path="/produtos" element={<Products />} />
+                  <Route path="/produto/:id" element={<ProductDetails />} />
+                  <Route path="/criar-produto" element={<ProductCreation />} />
+                  <Route path="/selecionar-tipo-produto" element={<ProductTypeSelection />} />
+                  <Route path="/criar-ebook" element={<EbookCreation />} />
+                  <Route path="/criar-curso" element={<CourseCreation />} />
+                  <Route path="/carrinho" element={<Cart />} />
+                  <Route path="/minhas-compras" element={<MyPurchases />} />
+                  <Route path="/curso/:id" element={<CourseViewer />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <ChatAssistant />
+              </div>
+              <Toaster />
+            </BrowserRouter>
+          </AuthProvider>
         </NotificationProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

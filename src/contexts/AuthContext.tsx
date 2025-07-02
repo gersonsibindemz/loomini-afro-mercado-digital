@@ -2,9 +2,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNotifications } from '@/components/NotificationSystem';
 import { UserProfile, AuthContextType } from '@/types/auth';
 import { fetchUserProfile, updateUserProfile, uploadUserAvatar } from '@/services/authService';
+import { toast } from 'sonner';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -21,7 +21,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { addNotification } = useNotifications();
 
   useEffect(() => {
     // Get initial session
@@ -56,11 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileData) {
         setProfile(profileData);
       } else {
-        addNotification({
-          type: 'error',
-          title: 'Erro ao carregar perfil',
-          message: 'Não foi possível carregar os dados do usuário'
-        });
+        toast.error('Erro ao carregar perfil do usuário');
       }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
@@ -92,11 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Erro ao criar conta. Tente novamente');
       }
 
-      addNotification({
-        type: 'success',
-        title: 'Conta criada com sucesso!',
-        message: 'Verifique seu email para confirmar a conta'
-      });
+      toast.success('Conta criada com sucesso! Verifique seu email para confirmar a conta');
 
       // Redirect to appropriate dashboard after successful signup
       const dashboardRoute = userData.isCreator ? '/painel-criador' : '/painel-comprador';
@@ -104,11 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.location.href = dashboardRoute;
       }, 2000);
     } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro no cadastro',
-        message: error.message
-      });
+      toast.error(error.message);
       throw error;
     }
   };
@@ -129,17 +116,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Erro ao fazer login. Tente novamente');
       }
 
-      addNotification({
-        type: 'success',
-        title: 'Login realizado!',
-        message: 'Bem-vindo de volta!'
-      });
+      toast.success('Login realizado! Bem-vindo de volta!');
     } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro no login',
-        message: error.message
-      });
+      toast.error(error.message);
       throw error;
     }
   };
@@ -149,17 +128,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      addNotification({
-        type: 'success',
-        title: 'Logout realizado',
-        message: 'Até logo!'
-      });
+      toast.success('Logout realizado. Até logo!');
     } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro ao sair',
-        message: 'Erro ao fazer logout'
-      });
+      toast.error('Erro ao fazer logout');
       throw error;
     }
   };
@@ -169,17 +140,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) throw error;
 
-      addNotification({
-        type: 'success',
-        title: 'Email enviado!',
-        message: 'Verifique sua caixa de entrada para redefinir a senha'
-      });
+      toast.success('Email enviado! Verifique sua caixa de entrada para redefinir a senha');
     } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro ao enviar email',
-        message: 'Não foi possível enviar o email de recuperação'
-      });
+      toast.error('Não foi possível enviar o email de recuperação');
       throw error;
     }
   };
@@ -190,17 +153,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await updateUserProfile(user.id, updates);
       await loadUserProfile(user.id);
-      addNotification({
-        type: 'success',
-        title: 'Perfil atualizado',
-        message: 'Dados salvos com sucesso!'
-      });
+      toast.success('Perfil atualizado com sucesso!');
     } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro ao salvar',
-        message: 'Não foi possível atualizar o perfil'
-      });
+      toast.error('Não foi possível atualizar o perfil');
       throw error;
     }
   };
@@ -211,11 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await updateUserProfile(user.id, { role: newRole });
       await loadUserProfile(user.id);
-      addNotification({
-        type: 'success',
-        title: 'Papel alterado!',
-        message: `Agora você é um ${newRole}`
-      });
+      toast.success(`Papel alterado! Agora você é um ${newRole}`);
 
       // Redirect to appropriate dashboard
       const dashboardRoute = newRole === 'criador' ? '/painel-criador' : '/painel-comprador';
@@ -223,11 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.location.href = dashboardRoute;
       }, 1500);
     } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro ao alterar papel',
-        message: 'Não foi possível alterar seu papel'
-      });
+      toast.error('Não foi possível alterar seu papel');
       throw error;
     }
   };
@@ -240,11 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await updateProfile({ avatar_url: avatarUrl });
       return avatarUrl;
     } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro no upload',
-        message: 'Não foi possível fazer upload da imagem'
-      });
+      toast.error('Não foi possível fazer upload da imagem');
       throw error;
     }
   };
