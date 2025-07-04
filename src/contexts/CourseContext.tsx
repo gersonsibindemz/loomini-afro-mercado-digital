@@ -2,40 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
-
-interface Course {
-  id: string;
-  title: string;
-  description_short: string;
-  description_full: string;
-  cover_image_url: string | null;
-  creator_id: string;
-  type: 'course' | 'ebook';
-  status: 'draft' | 'published' | 'archived';
-  price: number;
-  currency: string;
-  level: string;
-  category: string;
-  language: string;
-}
-
-interface Module {
-  id: string;
-  title: string;
-  product_id: string;
-  order_index: number;
-  lessons?: Lesson[];
-}
-
-interface Lesson {
-  id: string;
-  title: string;
-  description: string | null;
-  module_id: string;
-  order_index: number;
-  video_url: string | null;
-  duration: string | null;
-}
+import { Course, Module, Lesson } from '@/types/course';
 
 interface CourseContextType {
   currentCourse: Course | null;
@@ -99,11 +66,16 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         throw new Error('Erro ao carregar módulos');
       }
 
-      setModules(modulesData || []);
+      const formattedModules: Module[] = (modulesData || []).map(module => ({
+        ...module,
+        lessons: module.lessons || []
+      }));
+
+      setModules(formattedModules);
 
       // Set first lesson as current if available
-      if (modulesData && modulesData.length > 0) {
-        const firstModule = modulesData[0];
+      if (formattedModules && formattedModules.length > 0) {
+        const firstModule = formattedModules[0];
         if (firstModule.lessons && firstModule.lessons.length > 0) {
           setCurrentLesson(firstModule.lessons[0]);
         }

@@ -3,14 +3,10 @@ import React, { useState } from 'react';
 import { Play, Pause } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Lesson } from '@/types/course';
 
 interface VideoPlayerProps {
-  lesson: {
-    id: string;
-    title: string;
-    duration: string | null;
-    video_url: string | null;
-  };
+  lesson: Lesson;
   onComplete: () => void;
 }
 

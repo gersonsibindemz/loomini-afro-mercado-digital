@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCourse } from '@/contexts/CourseContext';
 import { useProgress } from '@/contexts/ProgressContext';

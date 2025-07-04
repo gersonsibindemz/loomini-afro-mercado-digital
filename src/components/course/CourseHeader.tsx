@@ -3,12 +3,10 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Course } from '@/types/course';
 
 interface CourseHeaderProps {
-  course: {
-    title: string;
-    creator_id: string;
-  };
+  course: Course;
   progress: number;
   onBack: () => void;
 }

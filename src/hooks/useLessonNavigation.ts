@@ -1,22 +1,6 @@
 
 import { useState, useCallback } from 'react';
-
-interface Lesson {
-  id: string;
-  title: string;
-  description: string | null;
-  module_id: string;
-  order_index: number;
-  video_url: string | null;
-  duration: string | null;
-}
-
-interface Module {
-  id: string;
-  title: string;
-  order_index: number;
-  lessons: Lesson[];
-}
+import { Module, Lesson } from '@/types/course';
 
 interface NavigationResult {
   lesson: Lesson | null;

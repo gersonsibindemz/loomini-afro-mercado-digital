@@ -2,19 +2,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
+import { CourseProgress } from '@/types/course';
 
 interface UserProgress {
   id: string;
   user_id: string;
   lesson_id: string;
   completed_at: string | null;
-}
-
-interface CourseProgress {
-  courseId: string;
-  completedLessons: string[];
-  totalLessons: number;
-  progressPercentage: number;
 }
 
 interface ProgressContextType {
@@ -47,7 +41,7 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .from('lessons')
         .select(`
           id,
-          modules (
+          modules!inner (
             product_id
           )
         `)

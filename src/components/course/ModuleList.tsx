@@ -9,18 +9,7 @@ import {
   Play 
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
-interface Lesson {
-  id: string;
-  title: string;
-  duration: string | null;
-}
-
-interface Module {
-  id: string;
-  title: string;
-  lessons: Lesson[];
-}
+import { Module, Lesson } from '@/types/course';
 
 interface ModuleListProps {
   modules: Module[];

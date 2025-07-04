@@ -4,14 +4,10 @@ import { CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Lesson } from '@/types/course';
 
 interface LessonInfoProps {
-  lesson: {
-    id: string;
-    title: string;
-    description: string | null;
-    duration: string | null;
-  };
+  lesson: Lesson;
   isCompleted: boolean;
   onMarkComplete: () => void;
 }
