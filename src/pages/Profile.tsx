@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   if (!user) {
     return (
@@ -30,7 +30,9 @@ const Profile = () => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700">Nome</label>
-              <p className="text-gray-900">{user.first_name} {user.last_name}</p>
+              <p className="text-gray-900">
+                {profile ? `${profile.first_name} ${profile.last_name}` : 'Carregando...'}
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Email</label>
@@ -38,7 +40,9 @@ const Profile = () => {
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Tipo de Conta</label>
-              <p className="text-gray-900 capitalize">{user.role}</p>
+              <p className="text-gray-900 capitalize">
+                {profile ? profile.role : 'Carregando...'}
+              </p>
             </div>
           </div>
         </CardContent>
