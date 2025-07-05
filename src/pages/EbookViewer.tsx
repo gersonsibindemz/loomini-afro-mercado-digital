@@ -4,33 +4,67 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, BookOpen, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePurchases } from '@/hooks/usePurchases';
+import { useProducts } from '@/hooks/useProducts';
 
 const EbookViewer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPurchased } = usePurchases();
+  const { products } = useProducts();
   const [ebook, setEbook] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se o usuário tem acesso ao e-book
-    const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
-    const purchase = purchases.find(p => p.id === id);
-    
-    if (!purchase) {
-      navigate('/minhas-compras', { 
-        state: { message: 'Você precisa comprar este e-book para acessá-lo.' }
-      });
-      return;
-    }
+    const loadEbook = async () => {
+      if (!id) return;
+      
+      // Check if user has purchased this ebook
+      if (!hasPurchased(id)) {
+        navigate('/minhas-compras', { 
+          state: { message: 'Você precisa comprar este e-book para acessá-lo.' }
+        });
+        return;
+      }
 
-    setEbook(purchase);
-  }, [id, navigate]);
+      // Find the ebook in products
+      const foundEbook = products.find(p => p.id === id && p.type === 'ebook');
+      
+      if (!foundEbook) {
+        navigate('/minhas-compras', { 
+          state: { message: 'E-book não encontrado.' }
+        });
+        return;
+      }
 
-  if (!ebook) {
+      setEbook(foundEbook);
+      setIsLoading(false);
+    };
+
+    loadEbook();
+  }, [id, navigate, hasPurchased, products]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Carregando e-book...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!ebook) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            E-book não encontrado
+          </h2>
+          <Button onClick={() => navigate('/minhas-compras')}>
+            Minhas Compras
+          </Button>
         </div>
       </div>
     );
@@ -53,7 +87,7 @@ const EbookViewer = () => {
               </Button>
               <div>
                 <h1 className="text-xl font-semibold">{ebook.title}</h1>
-                <p className="text-sm text-gray-600">por {ebook.creator}</p>
+                <p className="text-sm text-gray-600">{ebook.description_short}</p>
               </div>
             </div>
           </div>
@@ -62,7 +96,7 @@ const EbookViewer = () => {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Informações do E-book */}
+          {/* E-book Information */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -73,7 +107,7 @@ const EbookViewer = () => {
             <CardContent className="space-y-4">
               <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
                 <img 
-                  src={ebook.cover} 
+                  src={ebook.cover_image_url || '/placeholder.svg'} 
                   alt={ebook.title}
                   className="w-full h-full object-cover"
                 />
@@ -86,13 +120,13 @@ const EbookViewer = () => {
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Autor</label>
-                  <p className="text-gray-900">{ebook.creator}</p>
+                  <label className="text-sm font-medium text-gray-700">Categoria</label>
+                  <p className="text-gray-900">{ebook.category}</p>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Categoria</label>
-                  <p className="text-gray-900">{ebook.category}</p>
+                  <label className="text-sm font-medium text-gray-700">Idioma</label>
+                  <p className="text-gray-900">{ebook.language}</p>
                 </div>
                 
                 {ebook.pages && (
@@ -105,7 +139,7 @@ const EbookViewer = () => {
             </CardContent>
           </Card>
 
-          {/* Ações */}
+          {/* Actions */}
           <Card>
             <CardHeader>
               <CardTitle>Acessar Conteúdo</CardTitle>
@@ -143,15 +177,15 @@ const EbookViewer = () => {
           </Card>
         </div>
 
-        {/* Descrição */}
-        {ebook.description && (
+        {/* Description */}
+        {ebook.description_full && (
           <Card className="mt-8">
             <CardHeader>
               <CardTitle>Sobre este E-book</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 leading-relaxed">
-                {ebook.description}
+                {ebook.description_full}
               </p>
             </CardContent>
           </Card>

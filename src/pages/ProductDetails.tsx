@@ -16,121 +16,73 @@ import ProductHeader from '@/components/product/ProductHeader';
 import ProductStats from '@/components/product/ProductStats';
 import ProductMetadata from '@/components/product/ProductMetadata';
 import ProductPurchase from '@/components/product/ProductPurchase';
-import { calculateTotalDuration } from '@/utils/productUtils';
-
-// Mock product data
-const mockProducts = {
-  'ebook-1': {
-    id: 'ebook-1',
-    type: 'ebook',
-    title: 'Guia Completo de Marketing Digital',
-    category: 'Marketing',
-    description: 'Um guia abrangente sobre estratégias de marketing digital para pequenas e médias empresas.',
-    fullDescription: 'Este e-book é uma compilação completa das melhores práticas de marketing digital, desenvolvido especificamente para o mercado africano. Com exemplos práticos e estratégias testadas, você aprenderá como construir uma presença digital sólida para seu negócio.\n\nO conteúdo inclui: estratégias de SEO, marketing de conteúdo, gestão de redes sociais, campanhas de email marketing, análise de métricas e ROI, e muito mais.',
-    creator: 'Ana Silva',
-    price: 2500,
-    currency: 'MZN',
-    language: 'Português',
-    level: 'Iniciante',
-    pages: 120,
-    cover: '/placeholder.svg',
-    students: 1250,
-    rating: 4.8,
-    reviews: 89,
-    createdAt: '2024-01-15'
-  },
-  'curso-1': {
-    id: 'curso-1',
-    type: 'course',
-    title: 'Desenvolvimento Web Completo',
-    category: 'Tecnologia',
-    description: 'Aprenda desenvolvimento web do zero ao avançado. HTML, CSS, JavaScript, React e muito mais.',
-    fullDescription: 'Um curso completo de desenvolvimento web que vai te levar do básico ao avançado. Você aprenderá as tecnologias mais importantes do mercado e desenvolverá projetos reais que poderá adicionar ao seu portfólio.\n\nAo final do curso, você será capaz de criar aplicações web completas e estará pronto para o mercado de trabalho.',
-    creator: 'João Santos',
-    price: 15000,
-    currency: 'MZN',
-    language: 'Português',
-    level: 'Intermediário',
-    duration: '40 horas',
-    cover: '/placeholder.svg',
-    students: 892,
-    rating: 4.9,
-    reviews: 156,
-    createdAt: '2024-02-10',
-    modules: [
-      {
-        id: 1,
-        title: 'Fundamentos do HTML',
-        lessons: [
-          { title: 'Introdução ao HTML', duration: '15 min' },
-          { title: 'Tags e Elementos', duration: '20 min' },
-          { title: 'Estrutura de uma Página', duration: '25 min' }
-        ]
-      },
-      {
-        id: 2,
-        title: 'CSS e Estilização',
-        lessons: [
-          { title: 'Seletores CSS', duration: '18 min' },
-          { title: 'Flexbox e Grid', duration: '30 min' },
-          { title: 'Responsividade', duration: '25 min' }
-        ]
-      },
-      {
-        id: 3,
-        title: 'JavaScript Básico',
-        lessons: [
-          { title: 'Variáveis e Tipos', duration: '20 min' },
-          { title: 'Funções e Eventos', duration: '35 min' },
-          { title: 'DOM Manipulation', duration: '40 min' }
-        ]
-      }
-    ]
-  }
-};
+import { usePurchases } from '@/hooks/usePurchases';
+import { useProducts } from '@/hooks/useProducts';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { products } = useProducts();
+  const { createPurchase, isPurchasing, hasPurchased } = usePurchases();
+  
   const [product, setProduct] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [modules, setModules] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedModules, setExpandedModules] = useState({});
   const [isFavorited, setIsFavorited] = useState(false);
 
   useEffect(() => {
-    const foundProduct = mockProducts[id];
-    if (foundProduct) {
+    const loadProductData = async () => {
+      if (!id) return;
+      
+      setIsLoading(true);
+      
+      // Find product from the products list
+      const foundProduct = products.find(p => p.id === id);
+      if (!foundProduct) {
+        navigate('/not-found');
+        return;
+      }
+      
       setProduct(foundProduct);
-    } else {
-      navigate('/not-found');
-    }
-  }, [id, navigate]);
+      
+      // Load modules and lessons for courses
+      if (foundProduct.type === 'course') {
+        try {
+          const { data: modulesData, error } = await supabase
+            .from('modules')
+            .select(`
+              *,
+              lessons(*)
+            `)
+            .eq('product_id', id)
+            .order('order_index');
+            
+          if (error) {
+            console.error('Error loading modules:', error);
+          } else {
+            setModules(modulesData || []);
+          }
+        } catch (error) {
+          console.error('Error loading course modules:', error);
+        }
+      }
+      
+      setIsLoading(false);
+    };
+
+    loadProductData();
+  }, [id, products, navigate]);
 
   const handlePurchase = async () => {
-    setIsLoading(true);
+    if (!product) return;
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
-    const newPurchase = {
-      ...product,
-      purchaseDate: new Date().toISOString(),
-      purchaseId: Math.random().toString(36).substr(2, 9)
-    };
-    purchases.push(newPurchase);
-    localStorage.setItem('purchases', JSON.stringify(purchases));
-    
-    setIsLoading(false);
-    
-    toast({
-      title: "Compra realizada com sucesso!",
-      description: "Produto adicionado à sua biblioteca.",
+    createPurchase({ 
+      productId: product.id, 
+      amount: product.price 
     });
-    
-    setTimeout(() => {
-      navigate('/minhas-compras');
-    }, 1500);
   };
 
   const toggleModule = (moduleId) => {
@@ -140,18 +92,42 @@ const ProductDetails = () => {
     }));
   };
 
-  if (!product) {
-    return <div className="flex justify-center items-center min-h-screen">Carregando...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando produto...</p>
+        </div>
+      </div>
+    );
   }
+
+  if (!product) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Produto não encontrado
+          </h2>
+          <Button onClick={() => navigate('/produtos')}>
+            Ver Produtos
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const alreadyPurchased = hasPurchased(product.id);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         <ProductStats
-          students={product.students}
-          rating={product.rating}
-          reviews={product.reviews}
-          cover={product.cover}
+          students={0} // This would need to be calculated from purchases
+          rating={0} // This would need to be calculated from reviews
+          reviews={0}
+          cover={product.cover_image_url || '/placeholder.svg'}
           title={product.title}
         />
 
@@ -165,23 +141,23 @@ const ProductDetails = () => {
             language={product.language}
             level={product.level}
             type={product.type}
-            duration={product.type === 'course' ? calculateTotalDuration(product.modules) : undefined}
             pages={product.pages}
           />
 
           <ProductPurchase
             price={product.price}
             currency={product.currency}
-            isLoading={isLoading}
+            isLoading={isPurchasing}
             isFavorited={isFavorited}
             onPurchase={handlePurchase}
             onToggleFavorite={() => setIsFavorited(!isFavorited)}
+            alreadyPurchased={alreadyPurchased}
           />
         </div>
       </div>
 
-      {/* Course Modules or E-book Info */}
-      {product.type === 'course' && product.modules && (
+      {/* Course Modules */}
+      {product.type === 'course' && modules.length > 0 && (
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -191,7 +167,7 @@ const ProductDetails = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {product.modules.map((module) => (
+              {modules.map((module) => (
                 <Collapsible 
                   key={module.id}
                   open={expandedModules[module.id]}
@@ -201,12 +177,12 @@ const ProductDetails = () => {
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                          {module.id}
+                          {module.order_index}
                         </div>
                         <div className="text-left">
                           <h4 className="font-semibold">{module.title}</h4>
                           <p className="text-sm text-gray-600">
-                            {module.lessons.length} aulas
+                            {module.lessons?.length || 0} aulas
                           </p>
                         </div>
                       </div>
@@ -221,17 +197,21 @@ const ProductDetails = () => {
                   <CollapsibleContent>
                     <div className="ml-4 mt-2 space-y-2">
                       <p className="text-sm text-gray-600 mb-3">
-                        Prévia do Conteúdo (apenas títulos):
+                        Conteúdo do módulo:
                       </p>
-                      {module.lessons.map((lesson, index) => (
-                        <div key={index} className="flex items-center justify-between py-2 px-4 bg-white border rounded">
+                      {module.lessons?.map((lesson, index) => (
+                        <div key={lesson.id} className="flex items-center justify-between py-2 px-4 bg-white border rounded">
                           <div className="flex items-center space-x-3">
                             <FileText className="w-4 h-4 text-gray-400" />
                             <span className="text-sm">Aula {index + 1}: {lesson.title}</span>
                           </div>
-                          <span className="text-xs text-gray-500">{lesson.duration}</span>
+                          {lesson.duration && (
+                            <span className="text-xs text-gray-500">{lesson.duration}</span>
+                          )}
                         </div>
-                      ))}
+                      )) || (
+                        <p className="text-sm text-gray-500 italic">Nenhuma aula disponível</p>
+                      )}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
@@ -241,23 +221,21 @@ const ProductDetails = () => {
         </Card>
       )}
 
+      {/* E-book Info */}
       {product.type === 'ebook' && (
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Book className="w-5 h-5" />
-              <span>Informações do Livro</span>
+              <span>Informações do E-book</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h4 className="font-semibold mb-2">Detalhes</h4>
-                <p className="text-gray-600 mb-4">{product.pages} páginas</p>
-                <Button variant="outline" className="w-full">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Visualizar primeiras páginas
-                </Button>
+                <p className="text-gray-600 mb-4">{product.pages || 'N/A'} páginas</p>
+                <p className="text-gray-600 mb-4">{product.description_full || product.description_short}</p>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Formato</h4>

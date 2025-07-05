@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Star, ChevronDown, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -8,108 +9,34 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useShoppingCart } from '@/hooks/useShoppingCart';
-
-interface Product {
-  id: number;
-  title: string;
-  creator: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviews: number;
-  image: string;
-  category: string;
-  type: 'Curso' | 'E-book' | 'Template' | 'Software';
-  badge?: string;
-}
+import { useProducts } from '@/hooks/useProducts';
 
 const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addToCart, isInCart, getItemCount } = useShoppingCart();
+  const { products, isLoading } = useProducts();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedRegion, setSelectedRegion] = useState('Moçambique');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [purchasingProduct, setPurchasingProduct] = useState<number | null>(null);
   const productsPerPage = 12;
 
-  const categories = ['Todos', 'Marketing', 'Negócios', 'Tecnologia', 'Finanças', 'Design', 'Agricultura', 'Educação', 'Saúde', 'Idiomas', 'Desenvolvimento Pessoal', 'Música e Produção', 'Arte', 'Moda', 'Espiritualidade', 'Modelos Prontos'];
-  
-  const mockProducts: Product[] = [{
-    id: 1,
-    title: "Curso Completo de Marketing Digital",
-    creator: "Ana Silva",
-    price: 2500,
-    originalPrice: 3500,
-    rating: 4.8,
-    reviews: 234,
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=400&fit=crop",
-    category: "Marketing",
-    type: "Curso",
-    badge: "Bestseller"
-  }, {
-    id: 2,
-    title: "E-book: Empreendedorismo em África",
-    creator: "João Mateus",
-    price: 850,
-    rating: 4.9,
-    reviews: 156,
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-    category: "Negócios",
-    type: "E-book",
-    badge: "Novo"
-  }, {
-    id: 3,
-    title: "Templates para Redes Sociais",
-    creator: "Maria Costa",
-    price: 1200,
-    rating: 4.7,
-    reviews: 89,
-    image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=400&fit=crop",
-    category: "Design",
-    type: "Template"
-  }, {
-    id: 4,
-    title: "Curso de Programação Python",
-    creator: "Carlos Santos",
-    price: 1800,
-    rating: 4.6,
-    reviews: 312,
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=400&fit=crop",
-    category: "Tecnologia",
-    type: "Curso"
-  }, {
-    id: 5,
-    title: "Gestão Financeira Pessoal",
-    creator: "Lucia Fernandes",
-    price: 900,
-    rating: 4.5,
-    reviews: 178,
-    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=400&fit=crop",
-    category: "Finanças",
-    type: "E-book"
-  }, {
-    id: 6,
-    title: "Agricultura Sustentável em África",
-    creator: "Miguel Rodrigues",
-    price: 1500,
-    rating: 4.4,
-    reviews: 92,
-    image: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&h=400&fit=crop",
-    category: "Agricultura",
-    type: "Curso"
-  }];
+  // Get unique categories from real products
+  const categories = useMemo(() => {
+    const uniqueCategories = [...new Set(products.map(product => product.category))];
+    return ['Todos', ...uniqueCategories];
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
-    return mockProducts.filter(product => {
-      const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) || product.creator.toLowerCase().includes(searchTerm.toLowerCase());
+    return products.filter(product => {
+      const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'Todos' || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [products, searchTerm, selectedCategory]);
 
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * productsPerPage;
@@ -118,27 +45,27 @@ const Products = () => {
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
-  const handleViewDetails = (product: Product) => {
-    navigate(`/produto/${product.type === 'Curso' ? 'curso-1' : 'ebook-1'}`, { 
+  const handleViewDetails = (product: any) => {
+    navigate(`/produto/${product.id}`, { 
       state: { product } 
     });
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: any) => {
     const cartItem = {
-      id: product.id.toString(),
+      id: product.id,
       title: product.title,
       price: product.price,
-      currency: selectedRegion === 'Moçambique' ? 'MZN' : 'USD',
-      cover_image_url: product.image,
-      type: product.type === 'Curso' ? 'course' as const : 'ebook' as const
+      currency: product.currency,
+      cover_image_url: product.cover_image_url,
+      type: product.type
     };
 
     addToCart(cartItem);
   };
 
-  const ProductCard = ({ product }: { product: Product }) => {
-    const inCart = isInCart(product.id.toString());
+  const ProductCard = ({ product }: { product: any }) => {
+    const inCart = isInCart(product.id);
     
     return (
       <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden bg-lime-50">
@@ -147,17 +74,12 @@ const Products = () => {
           onClick={() => handleViewDetails(product)}
         >
           <img 
-            src={product.image} 
+            src={product.cover_image_url || '/placeholder.svg'} 
             alt={product.title} 
             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200" 
           />
-          {product.badge && (
-            <Badge className="absolute top-3 left-3 loomini-gradient text-white">
-              {product.badge}
-            </Badge>
-          )}
           <Badge variant="secondary" className="absolute top-3 right-3">
-            {product.type}
+            {product.type === 'course' ? 'Curso' : 'E-book'}
           </Badge>
         </div>
         
@@ -175,32 +97,13 @@ const Products = () => {
             {product.title}
           </h3>
           
-          <p className="text-gray-600 mb-3 text-sm">por {product.creator}</p>
-          
-          <div className="flex items-center mb-3">
-            <div className="flex items-center space-x-1">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-                />
-              ))}
-            </div>
-            <span className="ml-2 text-sm text-gray-600">
-              {product.rating} ({product.reviews} avaliações)
-            </span>
-          </div>
+          <p className="text-gray-600 mb-3 text-sm">{product.description_short}</p>
           
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <span className="text-xl font-bold text-loomini-blue">
                 {formatCurrency(product.price, selectedRegion)}
               </span>
-              {product.originalPrice && (
-                <span className="text-gray-400 line-through text-sm">
-                  {formatCurrency(product.originalPrice, selectedRegion)}
-                </span>
-              )}
             </div>
           </div>
           
@@ -230,6 +133,17 @@ const Products = () => {
       </Card>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando produtos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
