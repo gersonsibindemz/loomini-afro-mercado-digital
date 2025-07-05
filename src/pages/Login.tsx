@@ -1,12 +1,13 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
-import { useNotifications } from '../components/NotificationSystem';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { addNotification } = useNotifications();
+  const { signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -55,36 +56,12 @@ const Login = () => {
 
     setIsLoading(true);
 
-    // Simular autenticação
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simular login bem-sucedido
-      const userRole: 'comprador' | 'criador' = Math.random() > 0.5 ? 'comprador' : 'criador'; // This would come from actual authentication
-      localStorage.setItem('user', JSON.stringify({
-        email: formData.email,
-        role: userRole,
-        name: 'Usuário'
-      }));
-
-      addNotification({
-        type: 'success',
-        title: 'Login realizado com sucesso!',
-        message: 'Bem-vindo de volta ao e-Loomini'
-      });
-
-      // Redirect directly to role-specific dashboard
-      const dashboardRoute = userRole === 'criador' ? '/painel-criador' : '/painel-comprador';
-      setTimeout(() => {
-        navigate(dashboardRoute);
-      }, 1000);
-
+      await signIn(formData.email, formData.password);
+      // The AuthContext handles the redirect after successful login
     } catch (error) {
-      addNotification({
-        type: 'error',
-        title: 'Erro no login',
-        message: 'Email ou senha incorretos'
-      });
+      // Error handling is done in the AuthContext
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }

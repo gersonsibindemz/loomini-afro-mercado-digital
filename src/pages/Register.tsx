@@ -1,11 +1,11 @@
+
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, Loader2 } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Register = () => {
-  const navigate = useNavigate();
   const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -92,14 +92,9 @@ const Register = () => {
         lastName: formData.lastName,
         isCreator: formData.isCreator
       });
-
-      // Navigate to login after successful registration
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-
+      // The AuthContext handles the redirect after successful registration
     } catch (error) {
-      // Error handling is done in the signUp function
+      // Error handling is done in the AuthContext
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
