@@ -10,6 +10,7 @@ interface ProductPurchaseProps {
   isFavorited: boolean;
   onPurchase: () => void;
   onToggleFavorite: () => void;
+  alreadyPurchased: boolean;
 }
 
 const ProductPurchase: React.FC<ProductPurchaseProps> = ({
@@ -18,7 +19,8 @@ const ProductPurchase: React.FC<ProductPurchaseProps> = ({
   isLoading,
   isFavorited,
   onPurchase,
-  onToggleFavorite
+  onToggleFavorite,
+  alreadyPurchased
 }) => {
   const formatPrice = (price: number, currency: string) => {
     return `${price.toLocaleString()} ${currency}`;
@@ -33,10 +35,10 @@ const ProductPurchase: React.FC<ProductPurchaseProps> = ({
       <div className="flex space-x-3">
         <Button 
           onClick={onPurchase}
-          disabled={isLoading}
-          className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 text-lg"
+          disabled={isLoading || alreadyPurchased}
+          className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 text-lg disabled:bg-gray-400"
         >
-          {isLoading ? 'Processando compra...' : 'Comprar Agora'}
+          {alreadyPurchased ? 'Já Comprado' : (isLoading ? 'Processando compra...' : 'Comprar Agora')}
         </Button>
         
         <Button 

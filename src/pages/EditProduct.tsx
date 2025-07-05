@@ -28,7 +28,7 @@ const EditProduct = () => {
     pages: '',
     language: 'Português',
     currency: 'MZN',
-    status: 'draft'
+    status: 'draft' as 'draft' | 'published' | 'archived'
   });
 
   useEffect(() => {
@@ -100,7 +100,8 @@ const EditProduct = () => {
     const updates = {
       ...formData,
       price: parseFloat(formData.price),
-      pages: formData.type === 'ebook' && formData.pages ? parseInt(formData.pages) : null
+      pages: formData.type === 'ebook' && formData.pages ? parseInt(formData.pages) : null,
+      status: formData.status as 'draft' | 'published' | 'archived'
     };
 
     updateProduct({ id: product.id, updates });
