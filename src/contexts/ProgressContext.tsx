@@ -4,29 +4,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { CourseProgress } from '@/types/course';
 
-interface UserProgress {
-  id: string;
-  user_id: string;
-  lesson_id: string;
-  completed_at: string | null;
-}
-
 interface ProgressContextType {
   courseProgress: CourseProgress | null;
-  isLoading: boolean;
-  error: string | null;
-  markLessonComplete: (lessonId: string) => Promise<void>;
   loadCourseProgress: (courseId: string) => Promise<void>;
+  markLessonComplete: (lessonId: string) => Promise<void>;
   isLessonCompleted: (lessonId: string) => boolean;
-  clearProgress: () => void;
+  isLoading: boolean;
 }
 
 const ProgressContext = createContext<ProgressContextType | undefined>(undefined);
 
 export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [courseProgress, setCourseProgress] = useState<CourseProgress | null>(null);
+  const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
   const loadCourseProgress = async (courseId: string) => {
@@ -34,10 +25,36 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     try {
       setIsLoading(true);
-      setError(null);
 
-      // Get all lessons for the course
-      const { data: lessonsData, error: lessonsError } = await supabase
+      // Load user progress for this course
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_progress')
+        .select(`
+          lesson_id,
+          lessons (
+            module_id,
+            modules (
+              product_id
+            )
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (progressError) {
+        console.error('Error loading progress:', progressError);
+        return;
+      }
+
+      // Filter progress for this specific course
+      const courseProgressData = progressData?.filter(progress => 
+        progress.lessons?.modules?.product_id === courseId
+      ) || [];
+
+      const completedLessonIds = courseProgressData.map(p => p.lesson_id);
+      setCompletedLessons(completedLessonIds);
+
+      // Get total lessons count for this course
+      const { data: courseLessons, error: lessonsError } = await supabase
         .from('lessons')
         .select(`
           id,
@@ -48,36 +65,23 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .eq('modules.product_id', courseId);
 
       if (lessonsError) {
-        throw new Error('Erro ao carregar aulas do curso');
+        console.error('Error loading course lessons:', lessonsError);
+        return;
       }
 
-      const totalLessons = lessonsData?.length || 0;
-      const lessonIds = lessonsData?.map(lesson => lesson.id) || [];
-
-      // Get user progress for these lessons
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_progress')
-        .select('lesson_id, completed_at')
-        .eq('user_id', user.id)
-        .in('lesson_id', lessonIds);
-
-      if (progressError) {
-        throw new Error('Erro ao carregar progresso do usuário');
-      }
-
-      const completedLessons = progressData?.map(p => p.lesson_id) || [];
-      const progressPercentage = totalLessons > 0 ? (completedLessons.length / totalLessons) * 100 : 0;
+      const totalLessons = courseLessons?.length || 0;
+      const completedCount = completedLessonIds.length;
+      const progressPercentage = totalLessons > 0 ? (completedCount / totalLessons) * 100 : 0;
 
       setCourseProgress({
         courseId,
-        completedLessons,
+        completedLessons: completedLessonIds,
         totalLessons,
         progressPercentage
       });
 
-    } catch (err) {
-      console.error('Erro ao carregar progresso:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+    } catch (error) {
+      console.error('Error loading course progress:', error);
     } finally {
       setIsLoading(false);
     }
@@ -87,67 +91,56 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!user) return;
 
     try {
-      // Check if already completed
-      const { data: existingProgress } = await supabase
+      // Insert or update user progress
+      await supabase
         .from('user_progress')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('lesson_id', lessonId)
-        .single();
-
-      if (existingProgress) {
-        console.log('Aula já marcada como completa');
-        return;
-      }
-
-      // Mark as complete
-      const { error } = await supabase
-        .from('user_progress')
-        .insert({
+        .upsert({
           user_id: user.id,
           lesson_id: lessonId
         });
 
-      if (error) {
-        throw new Error('Erro ao marcar aula como completa');
-      }
-
       // Update local state
-      if (courseProgress) {
-        const updatedCompletedLessons = [...courseProgress.completedLessons, lessonId];
-        const updatedProgressPercentage = (updatedCompletedLessons.length / courseProgress.totalLessons) * 100;
+      setCompletedLessons(prev => {
+        if (!prev.includes(lessonId)) {
+          return [...prev, lessonId];
+        }
+        return prev;
+      });
 
-        setCourseProgress({
-          ...courseProgress,
-          completedLessons: updatedCompletedLessons,
-          progressPercentage: updatedProgressPercentage
-        });
+      // Update course progress
+      if (courseProgress) {
+        const newCompletedCount = completedLessons.includes(lessonId) 
+          ? completedLessons.length 
+          : completedLessons.length + 1;
+        const newProgressPercentage = courseProgress.totalLessons > 0 
+          ? (newCompletedCount / courseProgress.totalLessons) * 100 
+          : 0;
+
+        setCourseProgress(prev => prev ? {
+          ...prev,
+          completedLessons: completedLessons.includes(lessonId) 
+            ? prev.completedLessons 
+            : [...prev.completedLessons, lessonId],
+          progressPercentage: newProgressPercentage
+        } : null);
       }
 
-    } catch (err) {
-      console.error('Erro ao marcar progresso:', err);
-      setError(err instanceof Error ? err.message : 'Erro ao salvar progresso');
+    } catch (error) {
+      console.error('Error marking lesson complete:', error);
     }
   };
 
   const isLessonCompleted = (lessonId: string): boolean => {
-    return courseProgress?.completedLessons.includes(lessonId) || false;
-  };
-
-  const clearProgress = () => {
-    setCourseProgress(null);
-    setError(null);
+    return completedLessons.includes(lessonId);
   };
 
   return (
     <ProgressContext.Provider value={{
       courseProgress,
-      isLoading,
-      error,
-      markLessonComplete,
       loadCourseProgress,
+      markLessonComplete,
       isLessonCompleted,
-      clearProgress
+      isLoading
     }}>
       {children}
     </ProgressContext.Provider>

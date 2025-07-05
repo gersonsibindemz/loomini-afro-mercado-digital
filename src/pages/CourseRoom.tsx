@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useCourse } from '@/contexts/CourseContext';
 import { useProgress } from '@/contexts/ProgressContext';
 import { useLessonNavigation } from '@/hooks/useLessonNavigation';
+import { usePurchases } from '@/hooks/usePurchases';
 import { CourseHeader } from '@/components/course/CourseHeader';
 import { ModuleList } from '@/components/course/ModuleList';
 import { VideoPlayer } from '@/components/course/VideoPlayer';
@@ -14,6 +15,7 @@ import { LessonNavigation } from '@/components/course/LessonNavigation';
 const CourseRoom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPurchased } = usePurchases();
   const { 
     currentCourse, 
     modules, 
@@ -40,10 +42,18 @@ const CourseRoom = () => {
 
   useEffect(() => {
     if (id) {
+      // Check if user has purchased this course
+      if (!hasPurchased(id)) {
+        navigate('/minhas-compras', { 
+          state: { message: 'Você precisa comprar este curso para acessá-lo.' }
+        });
+        return;
+      }
+
       loadCourse(id);
       loadCourseProgress(id);
     }
-  }, [id]);
+  }, [id, hasPurchased, loadCourse, loadCourseProgress, navigate]);
 
   useEffect(() => {
     if (currentLesson) {
@@ -90,10 +100,35 @@ const CourseRoom = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Curso não encontrado'}</p>
-          <Button onClick={() => navigate('/minhas-compras')}>
-            Voltar para Minhas Compras
-          </Button>
+          <div className="mb-4">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-red-600 text-2xl">⚠️</span>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Curso não encontrado
+            </h2>
+            <p className="text-red-600 mb-4">
+              {error || 'Este curso não foi encontrado ou você não tem acesso a ele.'}
+            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">
+                Possíveis motivos:
+              </p>
+              <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                <li>Você não comprou este curso ainda</li>
+                <li>O curso foi removido ou está indisponível</li>
+                <li>Houve um erro ao carregar os dados</li>
+              </ul>
+            </div>
+          </div>
+          <div className="space-x-4">
+            <Button onClick={() => navigate('/minhas-compras')}>
+              Minhas Compras
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/produtos')}>
+              Ver Cursos Disponíveis
+            </Button>
+          </div>
         </div>
       </div>
     );
