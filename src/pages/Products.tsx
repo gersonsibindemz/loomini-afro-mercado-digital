@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Star, ChevronDown, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -46,9 +45,7 @@ const Products = () => {
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
   const handleViewDetails = (product: any) => {
-    navigate(`/produto/${product.id}`, { 
-      state: { product } 
-    });
+    navigate(`/produto/${product.id}`);
   };
 
   const handleAddToCart = (product: any) => {

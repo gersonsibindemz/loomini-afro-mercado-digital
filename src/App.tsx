@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
@@ -14,13 +15,16 @@ const HomePage = lazy(() => import("@/pages/Home"));
 const LoginPage = lazy(() => import("@/pages/Login"));
 const RegisterPage = lazy(() => import("@/pages/Register"));
 const ProductsPage = lazy(() => import("@/pages/Products"));
+const ProductDetailsPage = lazy(() => import("@/pages/ProductDetails"));
 const MyPurchasesPage = lazy(() => import("@/pages/MyPurchases"));
 const CourseRoomPage = lazy(() => import("@/pages/CourseRoom"));
 const EbookViewerPage = lazy(() => import("@/pages/EbookViewer"));
 const ProfilePage = lazy(() => import("@/pages/Profile"));
+const BuyerDashboardPage = lazy(() => import("@/pages/BuyerDashboard"));
 const CreatorDashboardPage = lazy(() => import("@/pages/CreatorDashboard"));
 const CreateProductPage = lazy(() => import("@/pages/CreateProduct"));
 const EditProductPage = lazy(() => import("@/pages/EditProduct"));
+const DashboardPage = lazy(() => import("@/pages/Dashboard"));
 
 const queryClient = new QueryClient();
 
@@ -42,10 +46,14 @@ const App = () => (
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/register" element={<RegisterPage />} />
                       <Route path="/produtos" element={<ProductsPage />} />
+                      <Route path="/produto/:id" element={<ProductDetailsPage />} />
                       <Route path="/minhas-compras" element={<MyPurchasesPage />} />
                       <Route path="/curso/:id" element={<CourseRoomPage />} />
                       <Route path="/ebook/:id" element={<EbookViewerPage />} />
                       <Route path="/perfil" element={<ProfilePage />} />
+                      <Route path="/dashboard" element={<DashboardPage />} />
+                      <Route path="/painel-comprador" element={<BuyerDashboardPage />} />
+                      <Route path="/painel-criador" element={<CreatorDashboardPage />} />
                       <Route path="/creator/dashboard" element={<CreatorDashboardPage />} />
                       <Route path="/creator/product/new" element={<CreateProductPage />} />
                       <Route path="/creator/product/edit/:id" element={<EditProductPage />} />

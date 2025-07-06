@@ -17,11 +17,10 @@ export const useProfileManagement = () => {
         setProfile(profileData);
         
         // Redirect to appropriate dashboard after profile is loaded
-        const dashboardRoute = profileData.role === 'criador' ? '/painel-criador' : '/painel-comprador';
+        const dashboardRoute = profileData.role === 'criador' ? '/creator/dashboard' : '/painel-comprador';
         console.log('Redirecting to:', dashboardRoute);
         
-        // Use proper timeout instead of string-based setTimeout
-        window.setTimeout(() => {
+        setTimeout(() => {
           window.location.href = dashboardRoute;
         }, 1000);
       } else {
@@ -74,8 +73,7 @@ export const useProfileManagement = () => {
       // Redirect to appropriate dashboard
       const dashboardRoute = newRole === 'criador' ? '/creator/dashboard' : '/painel-comprador';
       
-      // Use proper timeout instead of string-based setTimeout
-      window.setTimeout(() => {
+      setTimeout(() => {
         window.location.href = dashboardRoute;
       }, 1500);
     } catch (error: any) {

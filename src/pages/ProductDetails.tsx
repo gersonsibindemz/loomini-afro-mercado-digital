@@ -42,7 +42,7 @@ const ProductDetails = () => {
       // Find product from the products list
       const foundProduct = products.find(p => p.id === id);
       if (!foundProduct) {
-        navigate('/not-found');
+        navigate('/produtos');
         return;
       }
       

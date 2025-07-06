@@ -37,9 +37,7 @@ const Home = () => {
   }];
 
   const handleViewDetails = (product: any) => {
-    navigate(`/produto/${product.id}`, {
-      state: { product }
-    });
+    navigate(`/produto/${product.id}`);
   };
 
   const handlePurchase = async (product: any) => {
