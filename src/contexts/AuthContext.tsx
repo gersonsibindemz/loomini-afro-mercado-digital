@@ -1,9 +1,11 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotifications } from '@/components/NotificationSystem';
 import { UserProfile, AuthContextType } from '@/types/auth';
-import { fetchUserProfile, updateUserProfile, uploadUserAvatar } from '@/services/authService';
+import { signUpUser, signInUser, signOutUser, resetUserPassword } from '@/services/authOperations';
+import { useProfileManagement } from '@/hooks/useProfileManagement';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -17,10 +19,18 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { addNotification } = useNotifications();
+  
+  const {
+    profile,
+    setProfile,
+    loadUserProfile,
+    updateProfile: updateUserProfile,
+    switchRole: switchUserRole,
+    uploadAvatar: uploadUserAvatar
+  } = useProfileManagement();
 
   useEffect(() => {
     // Get initial session
@@ -42,7 +52,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         console.log('User logged in, loading profile...');
-        // Use setTimeout to avoid blocking the auth state change
         setTimeout(() => {
           loadUserProfile(session.user.id);
         }, 0);
@@ -53,72 +62,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  const loadUserProfile = async (userId: string) => {
-    try {
-      console.log('Loading profile for user:', userId);
-      const profileData = await fetchUserProfile(userId);
-      if (profileData) {
-        console.log('Profile loaded:', profileData);
-        setProfile(profileData);
-        
-        // Redirect to appropriate dashboard after profile is loaded
-        const dashboardRoute = profileData.role === 'criador' ? '/creator/dashboard' : '/painel-comprador';
-        console.log('Redirecting to:', dashboardRoute);
-        setTimeout(() => {
-          window.location.href = dashboardRoute;
-        }, 1000);
-      } else {
-        console.log('No profile found for user');
-        addNotification({
-          type: 'error',
-          title: 'Erro ao carregar perfil',
-          message: 'Não foi possível carregar os dados do usuário'
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao carregar perfil:', error);
-    }
-  };
+  }, [loadUserProfile, setProfile]);
 
   const signUp = async (email: string, password: string, userData: { firstName: string; lastName: string; isCreator: boolean }) => {
     try {
-      console.log('Starting signup process for:', email);
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-            role: userData.isCreator ? 'criador' : 'comprador'
-          }
-        }
-      });
-
-      if (error) {
-        console.error('Signup error:', error);
-        if (error.message.includes('already registered')) {
-          throw new Error('Este email já está registrado');
-        } else if (error.message.includes('weak password')) {
-          throw new Error('A senha deve ter pelo menos 6 caracteres');
-        } else if (error.message.includes('invalid email')) {
-          throw new Error('Email inválido');
-        }
-        throw new Error('Erro ao criar conta. Tente novamente');
-      }
-
-      console.log('Signup successful');
+      await signUpUser(email, password, userData);
       addNotification({
         type: 'success',
         title: 'Conta criada com sucesso!',
         message: 'Bem-vindo! Redirecionando...'
       });
-
-      // Don't manually redirect - let onAuthStateChange handle it
     } catch (error: any) {
       console.error('Signup error:', error);
       addNotification({
@@ -132,31 +85,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Starting signin process for:', email);
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        console.error('Signin error:', error);
-        if (error.message.includes('Invalid login credentials')) {
-          throw new Error('Email ou senha incorretos');
-        } else if (error.message.includes('Email not confirmed')) {
-          throw new Error('Confirme seu email antes de fazer login');
-        }
-        throw new Error('Erro ao fazer login. Tente novamente');
-      }
-
-      console.log('Signin successful');
+      await signInUser(email, password);
       addNotification({
         type: 'success',
         title: 'Login realizado!',
         message: 'Bem-vindo de volta!'
       });
-
-      // Don't manually redirect - let onAuthStateChange and loadUserProfile handle it
     } catch (error: any) {
       console.error('Login error:', error);
       addNotification({
@@ -170,9 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
+      await signOutUser();
       addNotification({
         type: 'success',
         title: 'Logout realizado',
@@ -190,9 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) throw error;
-
+      await resetUserPassword(email);
       addNotification({
         type: 'success',
         title: 'Email enviado!',
@@ -210,67 +140,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user) throw new Error('Usuário não autenticado');
-
-    try {
-      await updateUserProfile(user.id, updates);
-      await loadUserProfile(user.id);
-      addNotification({
-        type: 'success',
-        title: 'Perfil atualizado',
-        message: 'Dados salvos com sucesso!'
-      });
-    } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro ao salvar',
-        message: 'Não foi possível atualizar o perfil'
-      });
-      throw error;
-    }
+    await updateUserProfile(user.id, updates);
   };
 
   const switchRole = async (newRole: 'comprador' | 'criador') => {
     if (!user) throw new Error('Usuário não autenticado');
-
-    try {
-      await updateUserProfile(user.id, { role: newRole });
-      await loadUserProfile(user.id);
-      addNotification({
-        type: 'success',
-        title: 'Papel alterado!',
-        message: `Agora você é um ${newRole}`
-      });
-
-      // Redirect to appropriate dashboard
-      const dashboardRoute = newRole === 'criador' ? '/creator/dashboard' : '/painel-comprador';
-      setTimeout(() => {
-        window.location.href = dashboardRoute;
-      }, 1500);
-    } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro ao alterar papel',
-        message: 'Não foi possível alterar seu papel'
-      });
-      throw error;
-    }
+    await switchUserRole(user.id, newRole);
   };
 
   const uploadAvatar = async (file: File): Promise<string> => {
     if (!user) throw new Error('Usuário não autenticado');
-
-    try {
-      const avatarUrl = await uploadUserAvatar(user.id, file);
-      await updateProfile({ avatar_url: avatarUrl });
-      return avatarUrl;
-    } catch (error: any) {
-      addNotification({
-        type: 'error',
-        title: 'Erro no upload',
-        message: 'Não foi possível fazer upload da imagem'
-      });
-      throw error;
-    }
+    return await uploadUserAvatar(user.id, file);
   };
 
   const value = {
