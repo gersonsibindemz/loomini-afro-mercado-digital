@@ -108,7 +108,7 @@ const Register = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
 
-    // Limpar erro quando usuário começar a digitar
+    // Clear error when user starts typing
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({
         ...prev,

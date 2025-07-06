@@ -41,10 +41,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user && event === 'SIGNED_IN') {
         console.log('User signed in, loading profile...');
-        // Small delay to ensure user data is properly saved
-        setTimeout(() => {
+        // Use a proper timeout instead of string-based setTimeout
+        const timeoutId = window.setTimeout(() => {
           loadUserProfile(session.user.id);
         }, 500);
+        
+        // Clean up timeout on unmount
+        return () => window.clearTimeout(timeoutId);
       } else if (!session) {
         setProfile(null);
       }

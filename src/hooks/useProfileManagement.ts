@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { UserProfile } from '@/types/auth';
 import { fetchUserProfile, updateUserProfile, uploadUserAvatar } from '@/services/authService';
@@ -18,9 +19,14 @@ export const useProfileManagement = () => {
         // Redirect to appropriate dashboard after profile is loaded
         const dashboardRoute = profileData.role === 'criador' ? '/painel-criador' : '/painel-comprador';
         console.log('Redirecting to:', dashboardRoute);
-        setTimeout(() => {
+        
+        // Use proper timeout instead of string-based setTimeout
+        const timeoutId = window.setTimeout(() => {
           window.location.href = dashboardRoute;
         }, 1000);
+        
+        // Return cleanup function
+        return () => window.clearTimeout(timeoutId);
       } else {
         console.log('No profile found for user');
         addNotification({
@@ -70,9 +76,14 @@ export const useProfileManagement = () => {
 
       // Redirect to appropriate dashboard
       const dashboardRoute = newRole === 'criador' ? '/creator/dashboard' : '/painel-comprador';
-      setTimeout(() => {
+      
+      // Use proper timeout instead of string-based setTimeout
+      const timeoutId = window.setTimeout(() => {
         window.location.href = dashboardRoute;
       }, 1500);
+      
+      // Return cleanup function
+      return () => window.clearTimeout(timeoutId);
     } catch (error: any) {
       addNotification({
         type: 'error',
