@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/auth';
 
@@ -23,14 +24,21 @@ export const signUpUser = async (
 
   if (error) {
     console.error('Signup error:', error);
+    
+    // Mensagens de erro mais específicas
     if (error.message.includes('already registered')) {
       throw new Error('Este email já está registrado');
     } else if (error.message.includes('weak password')) {
       throw new Error('A senha deve ter pelo menos 6 caracteres');
     } else if (error.message.includes('invalid email')) {
       throw new Error('Email inválido');
+    } else if (error.message.includes('Database error saving new user')) {
+      throw new Error('Erro interno do servidor. Tente novamente em alguns minutos.');
+    } else if (error.message.includes('user_role')) {
+      throw new Error('Erro de configuração do sistema. Contate o suporte.');
     }
-    throw new Error('Erro ao criar conta. Tente novamente');
+    
+    throw new Error(`Erro ao criar conta: ${error.message}`);
   }
 
   console.log('Signup successful, user:', data.user);

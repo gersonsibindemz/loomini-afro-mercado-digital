@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,8 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user && event === 'SIGNED_IN') {
         console.log('User signed in, loading profile...');
-        // Use a proper timeout instead of string-based setTimeout
-        window.setTimeout(() => {
+        setTimeout(() => {
           loadUserProfile(session.user.id);
         }, 500);
       } else if (!session) {
@@ -66,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, userData: { firstName: string; lastName: string; isCreator: boolean }) => {
     try {
+      console.log('Initiating signup with data:', { email, userData });
       await signUpUser(email, password, userData);
       console.log('SignUp completed successfully');
       
@@ -75,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message: 'Verificação de email pode ser necessária. Aguarde o redirecionamento...'
       });
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error('Signup error in context:', error);
       addNotification({
         type: 'error',
         title: 'Erro no cadastro',
