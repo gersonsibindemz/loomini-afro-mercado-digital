@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { UserProfile } from '@/types/auth';
 import { fetchUserProfile, updateUserProfile, uploadUserAvatar } from '@/services/authService';
@@ -17,7 +16,7 @@ export const useProfileManagement = () => {
         setProfile(profileData);
         
         // Redirect to appropriate dashboard after profile is loaded
-        const dashboardRoute = profileData.role === 'criador' ? '/creator/dashboard' : '/painel-comprador';
+        const dashboardRoute = profileData.role === 'criador' ? '/painel-criador' : '/painel-comprador';
         console.log('Redirecting to:', dashboardRoute);
         setTimeout(() => {
           window.location.href = dashboardRoute;
@@ -32,6 +31,11 @@ export const useProfileManagement = () => {
       }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
+      addNotification({
+        type: 'error',
+        title: 'Erro ao carregar perfil',
+        message: 'Não foi possível carregar os dados do usuário'
+      });
     }
   };
 

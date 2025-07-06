@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/auth';
 
@@ -9,7 +8,7 @@ export const signUpUser = async (
 ) => {
   console.log('Starting signup process for:', email);
   
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -34,7 +33,8 @@ export const signUpUser = async (
     throw new Error('Erro ao criar conta. Tente novamente');
   }
 
-  console.log('Signup successful');
+  console.log('Signup successful, user:', data.user);
+  return data;
 };
 
 export const signInUser = async (email: string, password: string) => {

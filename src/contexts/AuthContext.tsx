@@ -33,6 +33,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useProfileManagement();
 
   useEffect(() => {
+    // Listen for auth changes first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user && event === 'SIGNED_IN') {
+        console.log('User signed in, loading profile...');
+        // Small delay to ensure user data is properly saved
+        setTimeout(() => {
+          loadUserProfile(session.user.id);
+        }, 500);
+      } else if (!session) {
+        setProfile(null);
+      }
+      setLoading(false);
+    });
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session:', session);
@@ -44,34 +62,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        console.log('User logged in, loading profile...');
-        setTimeout(() => {
-          loadUserProfile(session.user.id);
-        }, 0);
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
-    });
-
     return () => subscription.unsubscribe();
   }, [loadUserProfile, setProfile]);
 
   const signUp = async (email: string, password: string, userData: { firstName: string; lastName: string; isCreator: boolean }) => {
     try {
-      await signUpUser(email, password, userData);
+      const result = await signUpUser(email, password, userData);
+      console.log('SignUp result:', result);
+      
       addNotification({
         type: 'success',
         title: 'Conta criada com sucesso!',
-        message: 'Bem-vindo! Redirecionando...'
+        message: 'Verificação de email pode ser necessária. Aguarde o redirecionamento...'
       });
+      
+      return result;
     } catch (error: any) {
       console.error('Signup error:', error);
       addNotification({
