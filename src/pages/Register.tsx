@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, Loader2 } from 'lucide-react';
@@ -80,22 +79,32 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted with data:', formData);
+    
     if (!validateForm()) {
+      console.log('Form validation failed');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await signUp(formData.email, formData.password, {
+      console.log('Calling signUp with processed data:', {
+        email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
         isCreator: formData.isCreator
       });
-      // The AuthContext handles the redirect after successful registration
+
+      await signUp(formData.email, formData.password, {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        isCreator: formData.isCreator
+      });
+      
+      console.log('SignUp completed successfully');
     } catch (error) {
-      // Error handling is done in the AuthContext
-      console.error('Registration error:', error);
+      console.error('Registration error in component:', error);
     } finally {
       setIsLoading(false);
     }
@@ -103,9 +112,13 @@ const Register = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    
+    console.log(`Field ${name} changed to:`, newValue);
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: newValue
     }));
 
     // Clear error when user starts typing

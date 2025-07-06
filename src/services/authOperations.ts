@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/auth';
 
@@ -8,19 +7,28 @@ export const signUpUser = async (
   userData: { firstName: string; lastName: string; isCreator: boolean }
 ) => {
   console.log('Starting signup process for:', email);
+  console.log('User data received:', userData);
   
-  const { data, error } = await supabase.auth.signUp({
+  // Convert isCreator boolean to role string
+  const role = userData.isCreator ? 'criador' : 'comprador';
+  console.log('Mapped role:', role);
+  
+  const signUpData = {
     email,
     password,
     options: {
       emailRedirectTo: `${window.location.origin}/`,
       data: {
-        first_name: userData.firstName,
-        last_name: userData.lastName,
-        role: userData.isCreator ? 'criador' : 'comprador'
+        first_name: userData.firstName.trim(),
+        last_name: userData.lastName.trim(),
+        role: role
       }
     }
-  });
+  };
+  
+  console.log('Sending signup data to Supabase:', signUpData);
+  
+  const { data, error } = await supabase.auth.signUp(signUpData);
 
   if (error) {
     console.error('Signup error:', error);
@@ -42,6 +50,7 @@ export const signUpUser = async (
   }
 
   console.log('Signup successful, user:', data.user);
+  console.log('User created with role:', data.user?.user_metadata?.role);
   return data;
 };
 
