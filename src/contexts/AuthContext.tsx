@@ -67,16 +67,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, userData: { firstName: string; lastName: string; isCreator: boolean }) => {
     try {
-      const result = await signUpUser(email, password, userData);
-      console.log('SignUp result:', result);
+      await signUpUser(email, password, userData);
+      console.log('SignUp completed successfully');
       
       addNotification({
         type: 'success',
         title: 'Conta criada com sucesso!',
         message: 'Verificação de email pode ser necessária. Aguarde o redirecionamento...'
       });
-      
-      return result;
     } catch (error: any) {
       console.error('Signup error:', error);
       addNotification({
