@@ -21,12 +21,9 @@ export const useProfileManagement = () => {
         console.log('Redirecting to:', dashboardRoute);
         
         // Use proper timeout instead of string-based setTimeout
-        const timeoutId = window.setTimeout(() => {
+        window.setTimeout(() => {
           window.location.href = dashboardRoute;
         }, 1000);
-        
-        // Return cleanup function
-        return () => window.clearTimeout(timeoutId);
       } else {
         console.log('No profile found for user');
         addNotification({
@@ -78,12 +75,9 @@ export const useProfileManagement = () => {
       const dashboardRoute = newRole === 'criador' ? '/creator/dashboard' : '/painel-comprador';
       
       // Use proper timeout instead of string-based setTimeout
-      const timeoutId = window.setTimeout(() => {
+      window.setTimeout(() => {
         window.location.href = dashboardRoute;
       }, 1500);
-      
-      // Return cleanup function
-      return () => window.clearTimeout(timeoutId);
     } catch (error: any) {
       addNotification({
         type: 'error',

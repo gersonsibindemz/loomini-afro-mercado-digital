@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Listen for auth changes first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session);
       setSession(session);
       setUser(session?.user ?? null);
@@ -42,12 +41,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user && event === 'SIGNED_IN') {
         console.log('User signed in, loading profile...');
         // Use a proper timeout instead of string-based setTimeout
-        const timeoutId = window.setTimeout(() => {
+        window.setTimeout(() => {
           loadUserProfile(session.user.id);
         }, 500);
-        
-        // Clean up timeout on unmount
-        return () => window.clearTimeout(timeoutId);
       } else if (!session) {
         setProfile(null);
       }
