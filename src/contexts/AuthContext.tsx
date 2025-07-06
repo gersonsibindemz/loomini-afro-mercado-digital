@@ -25,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -35,11 +36,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await loadUserProfile(session.user.id);
+        console.log('User logged in, loading profile...');
+        // Use setTimeout to avoid blocking the auth state change
+        setTimeout(() => {
+          loadUserProfile(session.user.id);
+        }, 0);
       } else {
         setProfile(null);
       }
@@ -51,10 +57,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log('Loading profile for user:', userId);
       const profileData = await fetchUserProfile(userId);
       if (profileData) {
+        console.log('Profile loaded:', profileData);
         setProfile(profileData);
+        
+        // Redirect to appropriate dashboard after profile is loaded
+        const dashboardRoute = profileData.role === 'criador' ? '/creator/dashboard' : '/painel-comprador';
+        console.log('Redirecting to:', dashboardRoute);
+        setTimeout(() => {
+          window.location.href = dashboardRoute;
+        }, 1000);
       } else {
+        console.log('No profile found for user');
         addNotification({
           type: 'error',
           title: 'Erro ao carregar perfil',
@@ -68,10 +84,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, userData: { firstName: string; lastName: string; isCreator: boolean }) => {
     try {
+      console.log('Starting signup process for:', email);
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             first_name: userData.firstName,
             last_name: userData.lastName,
@@ -81,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
+        console.error('Signup error:', error);
         if (error.message.includes('already registered')) {
           throw new Error('Este email já está registrado');
         } else if (error.message.includes('weak password')) {
@@ -91,18 +111,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Erro ao criar conta. Tente novamente');
       }
 
+      console.log('Signup successful');
       addNotification({
         type: 'success',
         title: 'Conta criada com sucesso!',
-        message: 'Verifique seu email para confirmar a conta'
+        message: 'Bem-vindo! Redirecionando...'
       });
 
-      // Redirect to appropriate dashboard after successful signup
-      const dashboardRoute = userData.isCreator ? '/painel-criador' : '/painel-comprador';
-      setTimeout(() => {
-        window.location.href = dashboardRoute;
-      }, 2000);
+      // Don't manually redirect - let onAuthStateChange handle it
     } catch (error: any) {
+      console.error('Signup error:', error);
       addNotification({
         type: 'error',
         title: 'Erro no cadastro',
@@ -114,12 +132,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Starting signin process for:', email);
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
+        console.error('Signin error:', error);
         if (error.message.includes('Invalid login credentials')) {
           throw new Error('Email ou senha incorretos');
         } else if (error.message.includes('Email not confirmed')) {
@@ -128,20 +149,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Erro ao fazer login. Tente novamente');
       }
 
+      console.log('Signin successful');
       addNotification({
         type: 'success',
         title: 'Login realizado!',
         message: 'Bem-vindo de volta!'
       });
 
-      // Wait for profile to load and then redirect
-      setTimeout(() => {
-        if (profile) {
-          const dashboardRoute = profile.role === 'criador' ? '/painel-criador' : '/painel-comprador';
-          window.location.href = dashboardRoute;
-        }
-      }, 1000);
+      // Don't manually redirect - let onAuthStateChange and loadUserProfile handle it
     } catch (error: any) {
+      console.error('Login error:', error);
       addNotification({
         type: 'error',
         title: 'Erro no login',
@@ -225,7 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       // Redirect to appropriate dashboard
-      const dashboardRoute = newRole === 'criador' ? '/painel-criador' : '/painel-comprador';
+      const dashboardRoute = newRole === 'criador' ? '/creator/dashboard' : '/painel-comprador';
       setTimeout(() => {
         window.location.href = dashboardRoute;
       }, 1500);
